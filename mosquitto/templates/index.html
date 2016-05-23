@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>rabbitChat | Chat Server based on AMQP, RabbitMQ, sockJS, Tornado, sockjs-tornado and Pika</title>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:100,200,300,400,600,700" />
+    <link rel="stylesheet" href="../static/css/style.css" />
+</head>
+
+<body>
+    <h2 style="text-align: center;margin-bottom: 10px">rabbitChat Room!</h2>
+    <div id="protocols" style="float: right">
+        <ul>
+            <li>
+                <input id="websocket" type="checkbox" value="websocket" checked="checked">
+                <label for="websocket">websocket</label>
+            </li>
+            <li>
+                <input id="xhr-streaming" type="checkbox" value="xhr-streaming" checked="checked">
+                <label for="xhr-streaming">xhr-streaming</label>
+            </li>
+            <li>
+                <input id="iframe-eventsource" type="checkbox" value="iframe-eventsource" checked="checked">
+                <label for="iframe-eventsource">iframe-eventsource</label>
+            </li>
+            <li>
+                <input id="iframe-htmlfile" type="checkbox" value="iframe-htmlfile" checked="checked">
+                <label for="iframe-htmlfile">iframe-htmlfile</label>
+            </li>
+            <li>
+                <input id="xhr-polling" type="checkbox" value="xhr-polling" checked="checked">
+                <label for="xhr-polling">xhr-polling</label>
+            </li>
+            <li>
+                <input id="iframe-xhr-polling" type="checkbox" value="iframe-xhr-polling" checked="checked">
+                <label for="iframe-xhr-polling">iframe-xhr-polling</label>
+            </li>
+            <li>
+                <input id="jsonp-polling" type="checkbox" value="jsonp-polling" checked="checked">
+                <label for="jsonp-polling">jsonp-polling</label>
+            </li>
+        </ul>
+    </div>
+    <div class="connectbar">
+        <div class="connectButton">
+            <a id="connect" href="#">Connect</a>
+        </div>
+        <div class="connectStatus">
+            <h4 id="status" class="inactive">Offline
+        </h4>
+        </div>
+        <div class="welcome">
+            <div class="welcomeLine"></div>
+        </div>
+    </div>
+    <div class="log box boxleft  public">
+        <div class="groupchatTB">
+            <h4>Public Chat </h4>
+            <h3 id="groupcount" style="display:inline;margin-left: 40px; color:#fff; border-radius: 25%;background: #41C197;width: 40px;height: 40px;">0</h3>
+            <h3 id="grouppeople" style="display:inline;color:#000;font-size: 16px;font-weight: 400">&nbsp;online
+            </h3>
+        </div>
+        <div class="groupchatCB chatbox" id="groupCB">
+            <ul class="messages"></ul>
+        </div>
+        <form class="publicSend" style="display: inline;">
+            <input type="text" id="publictext" autocomplete="off" placeholder="type..." data="public" class="inpbox groupchatCBinp">
+            <input type="submit" value="send" id="publicsendbtn" class="inpbtn groupchatCBinpBtn">
+        </form>
+    </div>
+    <div class="log box boxright private">
+        <div class="groupchatTB">
+            <h4>Private Chat </h4>
+        </div>
+        <div class="groupchatCB privateList">
+            <ul class="privateUserList">
+                <li class="privateUser">
+                    <p>Rahul</p>
+                </li>
+                <li class="privateUser">
+                    <p>Geeta</p>
+                </li>
+                <li class="privateUser">
+                    <p>Suraj</p>
+                </li>
+                <li class="privateUser">
+                    <p>Diana</p>
+                </li>
+            </ul>
+        </div>
+        <div class="groupchatCB chatbox" id="privateCB" style="display:none;">
+        </div>
+        <form class="privateSend" style="display: inline; display: none">
+            <input type="text" id="privatetext" autocomplete="off" placeholder="type..." data="private" class="inpbox groupchatCBinp" >
+            <input type="submit" value="send" id="privatesendbtn" class="inpbtn groupchatCBinpBtn">
+        </form>
+    </div>
+    
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="http://cdn.jsdelivr.net/sockjs/0.3/sockjs.min.js"></script>
+<script src="../static/js/date.js"></script>
+<script src="../static/js/script.js"></script>
+
+</html>
