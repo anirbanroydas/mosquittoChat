@@ -11,22 +11,16 @@ provide interface to sockjs connection handlers behind the scene.
 
 import tornado.web
 import tornado.escape
-import tornado.ioloop
-import os
-import base64
 import logging
 
 
 
 from sockjs.tornado import SockJSConnection
-from rabbitChat.apps.rabbitmq.pubsub import RabbitMqClient
+from mosquittoChat.apps.mosquitto.pubsub import MosquittoClient
 
 
 LOGGER = logging.getLogger(__name__)
 
-# Main threads ioloop, not to be confused with current thread's ioloop
-# which is ioloop.IOLoop.current()
-ioloop = tornado.ioloop.IOLoop.instance()
 
 
 # Handles the general HTTP connections
@@ -41,6 +35,7 @@ class IndexHandler(tornado.web.RequestHandler):
         all other HTTP requests like POST, PUT, DELETE, etc are ignored.
 
         :return: Returns the rendered main requested page, in this case its the chat page, index.html
+
         """
 
         LOGGER.info('[IndexHandler] HTTP connection opened')
@@ -50,8 +45,11 @@ class IndexHandler(tornado.web.RequestHandler):
         LOGGER.info('[IndexHandler] index.html served')
 
 
-# no. of websocket connections
+
+# set of websocket connections
 websocketParticipants = set()
+# no. of mqtt clients
+mqttClients = set()
 
 
 
@@ -65,8 +63,8 @@ class ChatWebsocketHandler(SockJSConnection):
         """
         This method is called when a websocket/sockjs connection is opened for the first time.
         
-        :param      self  The object
-        :param      info  The information
+        :param      self:  The object
+        :param      info:  The information
         
         :return:    It returns the websocket object
 
@@ -74,13 +72,9 @@ class ChatWebsocketHandler(SockJSConnection):
 
         LOGGER.info('[ChatWebsocketHandler] Websocket connecition opened: %s ' % self)
 
-        # Initialize new pika rabbitmq client object for this websocket.
-        self.rabbit_client = RabbitMqClient()
-        # Assign websocket object to a Pika client object attribute.
+        # adding new websocket connection to global websocketParcticipants set
         websocketParticipants.add(self)
-        self.rabbit_client.websocket = self
-        # connect to rabbitmq
-        self.rabbit_client.start()
+
 
 
 
@@ -89,64 +83,79 @@ class ChatWebsocketHandler(SockJSConnection):
         This method is called when a message is received via the websocket/sockjs connection
         created initially.
         
-        :param      self     The object
-        :param      message  The message received via the connection.
-        
-        :return:     Returns the published message back to all other subscribers.
+        :param      self:     The object
+        :param      message:  The message received via the connection.
+        :type       message: json string
 
         """
 
-        LOGGER.info('[ChatWebsocketHandler] message received on Websocket: %s ' % self)
+        # LOGGER.info('[ChatWebsocketHandler] message received on Websocket: %s ' % self)
 
         res = tornado.escape.json_decode(message)
-        routing_key = res['routing_key']
-        msg = res['msg']
-        stage = msg['stage']
 
+        # print '[ChatWebsocketHandler] received msg : ', res
+
+        stage = res['stage']
+        
         if stage == 'start':
             LOGGER.info('[ChatWebsocketHandler] Message Stage : START')
 
-            name = msg['name']
-            # assign name to rabbit client
-            self.rabbit_client._person = name
-            # assign clientid to rabbit client
-            self.rabbit_client._clientid = self.genid()
-            # add no. of current participants/websocket connections
-            self.rabbit_client._participants = len(websocketParticipants)
-            msg['participants'] = len(websocketParticipants)
+            # get first-msg contents
+            name = res['msg']['name']
 
-        msg['clientid'] = self.rabbit_client._clientid
+            # Initialize new mqtt mosquitto client object for this websocket.
+            # call with default values, clean_session=True if using for public messaging,
+            # for private msgs feature, clean_session=False has to be initiated by 
+            # self._mqtt_client = MosquittoClient(clean_session=False)
+            self.mqtt_client = MosquittoClient(name=name, clean_session=False)
+            
+            # Assign websocket object to a Pika client object attribute.
+            self.mqtt_client.websocket = self
+            
+            # connect to Mosquitto
+            self.mqtt_client.start()
 
-        LOGGER.info('[ChatWebsocketHandler] Publishing the received message to RabbitMQ')
 
-        self.rabbit_client.publish(msg, routing_key)
+        else: 
+            msg_type = res['msg_type']
+            topic = res['topic']
+
+            # LOGGER.info('[ChatWebsocketHandler] Publishing the received message to Mosquitto')
+
+            if msg_type == 'public':
+                self.mqtt_client.publish(topic=topic, msg=res, qos=2, retain=False)
+            elif msg_type == 'private': 
+                self.mqtt_client.publish(topic=topic, msg=res, qos=2, retain=True)
 
 
 
+    
     def on_close(self):
         """
         This method is called when a websocket/sockjs connection is closed.
         
-        :param      self  The object
+        :param      self:  The object
         
         :return:     Doesn't return anything, except a confirmation of closed connection back to web app.
+        
         """
 
         LOGGER.info('[ChatWebsocketHandler] Websocket conneciton close event %s ' % self)
 
-        msg = {
-            'name': self.rabbit_client._person,
-            'stage': 'stop',
-            'msg_type': 'public',
-            'msg': self.rabbit_client._person + ' left',
-            'clientid': self.rabbit_client._clientid,
-            'participants': len(websocketParticipants) - 1
+        stopmsg = {
+                'msg_type': 'public',
+                'stage': 'stop',
+                'msg': {
+                            'clientid': self.mqtt_client._clientid, 
+                            'name': self.mqtt_client._name,
+                            'participants': len(websocketParticipants) - 1
+                        }
         }
 
-        routing_key = 'public.*'
+        topic = 'public/msgs'
 
         # publishing the close connection info to rest of the rabbitmq subscribers/clients
-        self.rabbit_client.publish(msg, routing_key)
+        self.mqtt_client.publish(topic=topic, msg=stopmsg, qos=2, retain=False)
 
         # removing the connection of global list
         websocketParticipants.remove(self)
@@ -154,9 +163,6 @@ class ChatWebsocketHandler(SockJSConnection):
         LOGGER.info('[ChatWebsocketHandler] Websocket connection closed')
 
 
-
-    def genid(self):
-        return base64.urlsafe_b64encode(os.urandom(32)).replace('=', 'e')
 
 
 
