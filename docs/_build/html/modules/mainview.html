@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Main View &mdash; mosquittoChat 1.0.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="mosquittoChat 1.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="API" href="../api.html"/>
+        <link rel="next" title="PubSub Module" href="pubsub.html"/>
+        <link rel="prev" title="API" href="../api.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mosquittoChat
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Main View</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#indexhandler">IndexHandler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chatwebsockethandler">ChatWebsocketHandler</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pubsub.html">PubSub Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">Full References in Nutshell</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">mosquittoChat</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API</a> &raquo;</li>
+      
+    <li>Main View</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/modules/mainview.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mosquittoChat.apps.main.views">
+<span id="main-view"></span><h1>Main View<a class="headerlink" href="#module-mosquittoChat.apps.main.views" title="Permalink to this headline">¶</a></h1>
+<p>This is the main view module which manages main tornado connections. This module
+provides request handlers for managing simple HTTP requests as well as Websocket requests.</p>
+<p>Although the websocket requests are actually sockJs requests which follows the sockjs protcol, thus it
+provide interface to sockjs connection handlers behind the scene.</p>
+<div class="section" id="indexhandler">
+<h2>IndexHandler<a class="headerlink" href="#indexhandler" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mosquittoChat.apps.main.views.IndexHandler">
+<em class="property">class </em><code class="descclassname">mosquittoChat.apps.main.views.</code><code class="descname">IndexHandler</code><span class="sig-paren">(</span><em>application</em>, <em>request</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.main.views.IndexHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>This handler is a basic regular HTTP handler to serve the chatroom page.</p>
+<dl class="method">
+<dt id="mosquittoChat.apps.main.views.IndexHandler.get">
+<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.main.views.IndexHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called when a client does a simple GET request,
+all other HTTP requests like POST, PUT, DELETE, etc are ignored.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns the rendered main requested page, in this case its the chat page, index.html</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mosquittoChat.apps.main.views.IndexHandler.__module__">
+<code class="descname">__module__</code><em class="property"> = 'mosquittoChat.apps.main.views'</em><a class="headerlink" href="#mosquittoChat.apps.main.views.IndexHandler.__module__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="chatwebsockethandler">
+<h2>ChatWebsocketHandler<a class="headerlink" href="#chatwebsockethandler" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mosquittoChat.apps.main.views.ChatWebsocketHandler">
+<em class="property">class </em><code class="descclassname">mosquittoChat.apps.main.views.</code><code class="descname">ChatWebsocketHandler</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.main.views.ChatWebsocketHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Websocket Handler implementing the sockjs Connection Class which will
+handle the websocket/sockjs connections.</p>
+<dl class="method">
+<dt id="mosquittoChat.apps.main.views.ChatWebsocketHandler.on_open">
+<code class="descname">on_open</code><span class="sig-paren">(</span><em>info</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.main.views.ChatWebsocketHandler.on_open" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called when a websocket/sockjs connection is opened for the first time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>self</strong> &#8211; The object</li>
+<li><strong>info</strong> &#8211; The information</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">It returns the websocket object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.main.views.ChatWebsocketHandler.on_message">
+<code class="descname">on_message</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.main.views.ChatWebsocketHandler.on_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called when a message is received via the websocket/sockjs connection
+created initially.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>self</strong> &#8211; The object</li>
+<li><strong>message</strong> (<em>json string</em>) &#8211; The message received via the connection.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.main.views.ChatWebsocketHandler.on_close">
+<code class="descname">on_close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.main.views.ChatWebsocketHandler.on_close" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called when a websocket/sockjs connection is closed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> &#8211; The object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Doesn&#8217;t return anything, except a confirmation of closed connection back to web app.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mosquittoChat.apps.main.views.ChatWebsocketHandler.__module__">
+<code class="descname">__module__</code><em class="property"> = 'mosquittoChat.apps.main.views'</em><a class="headerlink" href="#mosquittoChat.apps.main.views.ChatWebsocketHandler.__module__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pubsub.html" class="btn btn-neutral float-right" title="PubSub Module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../api.html" class="btn btn-neutral" title="API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Anirban Roy Das.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

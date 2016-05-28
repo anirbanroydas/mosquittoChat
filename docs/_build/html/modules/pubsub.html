@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PubSub Module &mdash; mosquittoChat 1.0.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="mosquittoChat 1.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="API" href="../api.html"/>
+        <link rel="next" title="Full References in Nutshell" href="../references.html"/>
+        <link rel="prev" title="Main View" href="mainview.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mosquittoChat
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mainview.html">Main View</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PubSub Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mosquittoclient">MosquittoClient</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">Full References in Nutshell</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">mosquittoChat</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API</a> &raquo;</li>
+      
+    <li>PubSub Module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/modules/pubsub.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mosquittoChat.apps.mosquitto.pubsub">
+<span id="pubsub-module"></span><h1>PubSub Module<a class="headerlink" href="#module-mosquittoChat.apps.mosquitto.pubsub" title="Permalink to this headline">¶</a></h1>
+<p>The pubsub module provides interface for the mosquitto client.</p>
+<p>It provides classes to create mqtt clients vai paho-mqtt library to connect to mosquitto broker server, 
+interact with and publish/subscribe to mosquitto via creating topics, methods to publish, subscribe/consume, 
+stop consuming, start publishing, start connection, stop connection,  acknowledge delivery by publisher,
+acknowledge receiving of messages by consumers and also add callbacks for various other events.</p>
+<div class="section" id="mosquittoclient">
+<h2>MosquittoClient<a class="headerlink" href="#mosquittoclient" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient">
+<em class="property">class </em><code class="descclassname">mosquittoChat.apps.mosquitto.pubsub.</code><code class="descname">MosquittoClient</code><span class="sig-paren">(</span><em>participants=1</em>, <em>name='user'</em>, <em>clientid=None</em>, <em>clean_session=True</em>, <em>userdata=None</em>, <em>host='localhost'</em>, <em>port=1883</em>, <em>keepalive=60</em>, <em>bind_address=''</em>, <em>username='guest'</em>, <em>password='guest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Mosquitto Client class that will create an interface to connect to mosquitto
+by creating mqtt clients.</p>
+<p>It provides methods for connecting, diconnecting, publishing, subscribing, unsubscribing and 
+also callbacks related to many different events like on_connect, on_message, on_publish, on_subscribe,
+on_unsubcribe, on_disconnect.</p>
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>participants=1</em>, <em>name='user'</em>, <em>clientid=None</em>, <em>clean_session=True</em>, <em>userdata=None</em>, <em>host='localhost'</em>, <em>port=1883</em>, <em>keepalive=60</em>, <em>bind_address=''</em>, <em>username='guest'</em>, <em>password='guest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new instance of the MosquittoClient class, passing in the client
+informaation, host, port, keepalive parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>participants</strong> (<em>int</em>) &#8211; number of participants available presently</li>
+<li><strong>name</strong> (<em>string</em>) &#8211; name of client trying to connect to msoquitto</li>
+<li><strong>clientid</strong> (<em>string</em>) &#8211; unique client id for a client-broker connection</li>
+<li><strong>clean_session</strong> (<em>bool</em>) &#8211; whether to keep persistant connecion or not</li>
+<li><strong>userdata</strong> (<em>user defined data (can be int, string, or any object)</em>) &#8211; user defined data of any type that is passed as the userdata parameter to callbacks.
+It may be updated at a later point with the user_data_set() function.</li>
+<li><strong>host</strong> (<em>string</em>) &#8211; the hostname or IP address of the remote broker</li>
+<li><strong>port</strong> (<em>int</em>) &#8211; the network port of the server host to connect to. Defaults to 1883.
+Note that the default port for MQTT over SSL/TLS is 8883 so if you are using tls_set() the port may need providing manually</li>
+<li><strong>keepalive</strong> (<em>int</em>) &#8211; maximum period in seconds allowed between communications with the broker. 
+If no other messages are being exchanged, this controls the rate at which the client will send ping messages to the broker</li>
+<li><strong>bind_address</strong> (<em>string</em>) &#8211; the IP address of a local network interface to bind this client to, assuming multiple interfaces exist</li>
+<li><strong>username</strong> (<em>string</em>) &#8211; username for authentication</li>
+<li><strong>password</strong> (<em>string</em>) &#8211; password for authentication</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient._genid">
+<code class="descname">_genid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient._genid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that generates unique clientids by calling base64.urlsafe_b64encode(os.urandom(32)).replace(&#8216;=&#8217;, &#8216;e&#8217;).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a unique urlsafe id</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to start the mosquitto client by initiating a connection  to mosquitto broker
+by using the connect method and staring the network loop.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.setup_connection">
+<code class="descname">setup_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.setup_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to setup the extra options like username,password, will set, tls_set etc 
+before starting the connection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.create_client">
+<code class="descname">create_client</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.create_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create the paho-mqtt Client object which will be used to connect 
+to mosquitto.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a mosquitto mqtt client object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">paho.mqtt.client.Client</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.setup_callbacks">
+<code class="descname">setup_callbacks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.setup_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to setup all callbacks related to the connection, like on_connect,
+on_disconnect, on_publish, on_subscribe, on_unsubcribe etc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method connects to Mosquitto via returning the 
+connection return code.</p>
+<p>When the connection is established, the on_connect callback
+will be invoked by paho-mqtt.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a mosquitto mqtt connection return code, success, failure, error, etc</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_connect">
+<code class="descname">on_connect</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>flags</em>, <em>rc</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called when the broker responds to our
+connection request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client instance for this callback</li>
+<li><strong>userdata</strong> &#8211; the private user data as set in Client() or userdata_set()</li>
+<li><strong>flags</strong> (<em>dict</em>) &#8211; response flags sent by the broker</li>
+<li><strong>rc</strong> (<em>int</em>) &#8211; the connection result</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>flags is a dict that contains response flags from the broker:</p>
+<p>flags[&#8216;session present&#8217;] - this flag is useful for clients that are using clean session
+set to 0 only. If a client with clean session=0, that reconnects to a broker that it has
+previously connected to, this flag indicates whether the broker still has the session 
+information for the client. If 1, the session still exists.</p>
+<p>The value of rc indicates success or not:</p>
+<p>0: Connection successful 1: Connection refused - incorrect protocol version 
+2: Connection refused - invalid client identifier 3: Connection refused - server unavailable 
+4: Connection refused - bad username or password 5: Connection refused - not authorised 
+6-255: Currently unused.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.start_ioloop">
+<code class="descname">start_ioloop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.start_ioloop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to start ioloop for paho-mqtt mosquitto clients so that it can 
+process read/write events for the sockets.</p>
+<p>Using tornado&#8217;s ioloop, since if we use any of the loop*() function provided by
+phao-mqtt library, it will either block the entire tornado thread, or it will 
+keep on creating separate thread for each client if we use loop_start() fucntion.</p>
+<p>We don&#8217;t want to block thread or to create so many threads unnecessarily given 
+python GIL.</p>
+<p>Since the separate threads calls the loop() function indefinitely, and since its doing 
+network io, its possible it may release GIL, but I haven&#8217;t checked that yet, if that 
+is the case, we can very well use loop_start().Pattern</p>
+<p>But for now we will add handlers to tornado&#8217;s ioloop().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.stop_ioloop">
+<code class="descname">stop_ioloop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.stop_ioloop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to stop ioloop for paho-mqtt mosquitto clients so that it cannot 
+process any more read/write events for the sockets.</p>
+<p>Actually the paho-mqtt mosquitto socket has been closed, so bascially this
+method removed the tornaod ioloop handler for this socket.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient._events_handler">
+<code class="descname">_events_handler</code><span class="sig-paren">(</span><em>fd</em>, <em>events</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient._events_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle IO/Event loop events, processing them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fd</strong> (<em>int</em>) &#8211; The file descriptor for the events</li>
+<li><strong>events</strong> (<em>int</em>) &#8211; Events from the IO/Event loop</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.start_schedular">
+<code class="descname">start_schedular</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.start_schedular" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method calls Tornado&#8217;s PeriodicCallback to schedule a callback every few seconds,
+which calls paho mqtt client&#8217;s loop_misc() function which keeps the connection open by
+checking for keepalive value and by keep sending pingreq and pingresp to moqsuitto broker.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.stop_schedular">
+<code class="descname">stop_schedular</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.stop_schedular" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method calls stops the tornado&#8217;s periodicCallback Schedular loop.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to disconnect the mqqt connection with mosquitto broker.</p>
+<p>on_disconnect callback is called as a result of this method call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_disconnect">
+<code class="descname">on_disconnect</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>rc</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called when the client disconnects from
+the broker.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.subscribe">
+<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic_list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.subscribe" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method sets up the mqtt client to start subscribing to topics by accepting a list of tuples
+of topic and qos pairs.</p>
+<p>The on_subscribe method is called as a callback if subscribing is succesfull or if it unsuccessfull, the broker
+returng the suback frame.</p>
+<p>:param      :topic_list:    a tuple of (topic, qos), or, a list of tuple of format (topic, qos). 
+:type       :topic_list:    list or tuple</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_subscribe">
+<code class="descname">on_subscribe</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>mid</em>, <em>granted_qos</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_subscribe" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called when the broker responds to a subscribe request.</p>
+<p>The mid variable matches the mid variable returned from the corresponding subscribe() call.
+The granted_qos variable is a list of integers that give the QoS level the broker has granted
+for each of the different subscription requests.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client which subscribed which triggered this callback</li>
+<li><strong>userdata</strong> &#8211; the userdata associated with the client during its creation</li>
+<li><strong>mid</strong> (<em>int</em>) &#8211; the message id value returned by the broker</li>
+<li><strong>granted_qos</strong> (<em>list</em>) &#8211; list of integers that give the QoS level the broker has granted 
+for each of the different subscription requests</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.addNewMqttMosquittoClient">
+<code class="descname">addNewMqttMosquittoClient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.addNewMqttMosquittoClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called after new mqtt connection is established and the client has started subsribing to 
+atleast some topics, called by on_subscribe callback.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.sendMsgToWebsocket">
+<code class="descname">sendMsgToWebsocket</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.sendMsgToWebsocket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to send message to associated websocket.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> (<em>string, unicode or json encoded string or a dict</em>) &#8211; the message to be sent to the websocket</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.unsubscribe">
+<code class="descname">unsubscribe</code><span class="sig-paren">(</span><em>topic_list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.unsubscribe" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method sets up the mqtt client to unsubscribe to topics by accepting topics as string or list.</p>
+<p>The on_unsubscribe method is called as a callback if unsubscribing is succesfull or if it unsuccessfull.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>topic_list</strong> (<em>list of strings(topics)</em>) &#8211; The topics to be unsubscribed from</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_unsubscribe">
+<code class="descname">on_unsubscribe</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>mid</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_unsubscribe" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called when the broker responds to an 
+unsubscribe request. The mid variable matches the mid variable returned from t
+he corresponding unsubscribe() call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client which initiated unsubscribed</li>
+<li><strong>userdata</strong> &#8211; the userdata associated with the client</li>
+<li><strong>mid</strong> (<em>int</em>) &#8211; the message id value sent by the broker of the unsubscribe call.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.publish">
+<code class="descname">publish</code><span class="sig-paren">(</span><em>topic</em>, <em>msg=None</em>, <em>qos=2</em>, <em>retain=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the class is not stopping, publish a message to MosquittoClient.</p>
+<p>on_publish callback is called after broker confirms the published message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>topic</strong> (<em>string</em>) &#8211; The topic the message is to published to</li>
+<li><strong>msg</strong> (<em>string</em>) &#8211; Message to be published to broker</li>
+<li><strong>qos</strong> (<em>int (0, 1 or 2)</em>) &#8211; the qos of publishing message</li>
+<li><strong>retain</strong> (<em>bool</em>) &#8211; Should the message be retained or not</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_publish">
+<code class="descname">on_publish</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>mid</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called when a message that was to be sent
+using the publish() call has completed transmission to the broker. For messages
+with QoS levels 1 and 2, this means that the appropriate handshakes have completed.</p>
+<p>For QoS 0, this simply means that the message has left the client. 
+The mid variable matches the mid variable returned from the corresponding publish()
+call, to allow outgoing messages to be tracked.</p>
+<p>This callback is important because even if the publish() call returns success,
+it does not always mean that the message has been sent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client who initiated the publish method</li>
+<li><strong>userdata</strong> &#8211; the userdata associated with the client during its creation</li>
+<li><strong>mid</strong> (<em>int</em>) &#8211; the message id sent by the broker</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_private_message">
+<code class="descname">on_private_message</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_private_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called  when a message has been received on a topic
+[private/cientid/msgs] that the client subscribes to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client who initiated the publish method</li>
+<li><strong>userdata</strong> &#8211; the userdata associated with the client during its creation</li>
+<li><strong>msg</strong> &#8211; the message sent by the broker</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_private_status">
+<code class="descname">on_private_status</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_private_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called  when a message has been received on a topic
+[private/cientid/status] that the client subscribes to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client who initiated the publish method</li>
+<li><strong>userdata</strong> &#8211; the userdata associated with the client during its creation</li>
+<li><strong>msg</strong> &#8211; the message sent by the broker</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_public_message">
+<code class="descname">on_public_message</code><span class="sig-paren">(</span><em>client</em>, <em>userdata</em>, <em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.on_public_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a Callback method and is called  when a message has been received on a topic
+[public/msgs] that the client subscribes to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> &#8211; the client who initiated the publish method</li>
+<li><strong>userdata</strong> &#8211; the userdata associated with the client during its creation</li>
+<li><strong>msg</strong> &#8211; the message sent by the broker</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.send_offline_status">
+<code class="descname">send_offline_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.send_offline_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method is called when the mqtt client&#8217;s corresponding websocket is closed.
+This method will send the subcribing clients to its private status an offline status
+message.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.delMqttMosquittoClient">
+<code class="descname">delMqttMosquittoClient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.delMqttMosquittoClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called after an mqtt clinet unsubsribes to 
+atleast some topics, called by on_subscribe callback.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns update mqqt clients active</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict with update count</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleanly shutdown the connection to Mosquitto by disconnecting the mqtt client.</p>
+<p>When mosquitto confirms disconection, on_disconnect callback will be called.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__dict__">
+<code class="descname">__dict__</code><em class="property"> = dict_proxy({'__module__': 'mosquittoChat.apps.mosquitto.pubsub', 'create_client': &lt;function create_client at 0x102ef6c08&gt;, 'setup_connection': &lt;function setup_connection at 0x102ef6b90&gt;, 'on_publish': &lt;function on_publish at 0x102efb500&gt;, 'stop': &lt;function stop at 0x102efb7d0&gt;, 'stop_ioloop': &lt;function stop_ioloop at 0x102ef6e60&gt;, 'on_subscribe': &lt;function on_subscribe at 0x102efb230&gt;, 'subscribe': &lt;function subscribe at 0x102efb1b8&gt;, 'unsubscribe': &lt;function unsubscribe at 0x102efb398&gt;, 'connect': &lt;function connect at 0x102ef6cf8&gt;, '__dict__': &lt;attribute '__dict__' of 'MosquittoClient' objects&gt;, '__weakref__': &lt;attribute '__weakref__' of 'MosquittoClient' objects&gt;, '__init__': &lt;function __init__ at 0x102ef6a28&gt;, 'addNewMqttMosquittoClient': &lt;function addNewMqttMosquittoClient at 0x102efb2a8&gt;, 'sendMsgToWebsocket': &lt;function sendMsgToWebsocket at 0x102efb320&gt;, 'on_disconnect': &lt;function on_disconnect at 0x102efb140&gt;, 'send_offline_status': &lt;function send_offline_status at 0x102efb6e0&gt;, 'disconnect': &lt;function disconnect at 0x102efb0c8&gt;, 'setup_callbacks': &lt;function setup_callbacks at 0x102ef6c80&gt;, 'stop_schedular': &lt;function stop_schedular at 0x102efb050&gt;, 'start': &lt;function start at 0x102ef6b18&gt;, 'on_public_message': &lt;function on_public_message at 0x102efb668&gt;, 'on_private_message': &lt;function on_private_message at 0x102efb578&gt;, 'on_connect': &lt;function on_connect at 0x102ef6d70&gt;, '__doc__': '\n    This is a Mosquitto Client class that will create an interface to connect to mosquitto\n    by creating mqtt clients.\n\n    It provides methods for connecting, diconnecting, publishing, subscribing, unsubscribing and \n    also callbacks related to many different events like on_connect, on_message, on_publish, on_subscribe,\n    on_unsubcribe, on_disconnect.\n\n    ', '_genid': &lt;function _genid at 0x102ef6aa0&gt;, 'start_ioloop': &lt;function start_ioloop at 0x102ef6de8&gt;, 'delMqttMosquittoClient': &lt;function delMqttMosquittoClient at 0x102efb758&gt;, 'on_unsubscribe': &lt;function on_unsubscribe at 0x102efb410&gt;, 'start_schedular': &lt;function start_schedular at 0x102ef6f50&gt;, '_events_handler': &lt;function _events_handler at 0x102ef6ed8&gt;, 'on_private_status': &lt;function on_private_status at 0x102efb5f0&gt;, 'publish': &lt;function publish at 0x102efb488&gt;})</em><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__dict__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__module__">
+<code class="descname">__module__</code><em class="property"> = 'mosquittoChat.apps.mosquitto.pubsub'</em><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__module__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#mosquittoChat.apps.mosquitto.pubsub.MosquittoClient.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../references.html" class="btn btn-neutral float-right" title="Full References in Nutshell" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mainview.html" class="btn btn-neutral" title="Main View" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Anirban Roy Das.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

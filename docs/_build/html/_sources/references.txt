@@ -1,0 +1,245 @@
+===========================
+Full Reference in Nutshell
+===========================
+
+An MQTT protocol based Chat-Server/Chat-System using Mosquitto Broker, tornado as web server, sockjs in client(browser) side javascript library, sockjs-tornado as sockjs implementation on server side and paho-mqtt (mqtt python client).
+
+
+Documentation
+--------------
+
+**Link :** http://mosquittochat.readthedocs.io/en/latest/
+
+
+Project Home Page
+--------------------
+
+**Link :** https://pypi.python.org/pypi/mosquittoChat
+
+
+
+Details
+--------
+
+
+:Author: Anirban Roy Das
+:Email: anirban.nick@gmail.com
+:Copyright(C): 2016, Anirban Roy Das <anirban.nick@gmail.com>
+
+Check ``rabbitChat/LICENSE`` file for full Copyright notice.
+
+
+
+Overview
+---------
+
+mosquittochat is an MQTT protocol based simple Chat Server which can be set up locally to chat in your LAN. It supports both **Public Chat** among all participants connected simultaneously at a particular time and also **Private Chat** betweent those individual participants.
+
+It uses the `MQTT <https://www.mqtt.org/>`_  protocol to implement the real time message passing system. **MQTT** is implemented in many languages and in many softwares, one of such is `Mosquitto <https://www.mosquitto.org/>`_ , which is a message broker implementing the `MQTT <https://www.mqtt.org/>`_ protocol.
+
+The connection is created using the `sockjs <https://github.com/sockjs/sockjs-client>`_ protocol. **SockJS** is implemented in many languages, primarily in Javascript to talk to the servers in real time, which tries to create a duplex bi-directional connection between the **Client(browser)** and the **Server**. Ther server should also implement the **sockjs** protocol. Thus using the  `sockjs-tornado <https://github.com/MrJoes/sockjs-tornado>`_ library which exposes the **sockjs** protocol in `Tornado <http://www.tornadoweb.org/>`_ server.
+
+It first tries to create a `Websocket <https://en.wikipedia.org/wiki/WebSocket>`_ connection, and if it fails then it fallbacks to other transport mechanisms, such as **Ajax**, **long polling**, etc. After the connection is established, the tornado server**(sockjs-tornado)** connects to **Mosquitto** via MQTT protocol using the **MQTT Python Client Library**, `paho-mqtt <https://pypi.python.org/pypi/paho-mqtt/>`_. 
+
+Thus the connection is *web-browser* to *tornado* to *mosquitto* and vice versa.
+
+
+
+
+Technical Specs
+----------------
+
+
+:sockjs-client: Advanced Websocket Javascript Client
+:Tornado: Async Python Web Library + Web Server
+:sockjs-tornado: SockJS websocket server implementation for Tornado
+:MQTT: Machine-to-Machine (M2M)/"Internet of Things" connectivity protocol
+:paho-mqtt: MQTT Python Client Library
+:Mosquitto: A Message Broker implementing MQTT in C
+
+
+
+Features
+---------
+
+* Public chat
+* Shows who joined and who left
+* Shows list of users online/offline 
+* Show last seen of offline features
+* Shows who is typing and who is not - typing indicator
+* Shows number of people online in public chat
+* Join/Leave chat room features
+
+
+
+
+
+
+Installation
+------------
+
+Prerequisites
+~~~~~~~~~~~~~
+
+1. python 2.7+
+2. tornado
+3. sockjs-tornado
+4. sockjs-client
+5. paho-mqtt
+6. mosquitto
+
+
+Install
+~~~~~~~
+::
+
+        $ pip install mosquittoChat
+
+If above dependencies do not get installed by the above command, then use the below steps to install them one by one.
+
+ **Step 1 - Install pip**
+
+ Follow the below methods for installing pip. One of them may help you to install pip in your system.
+
+ * **Method 1 -**  https://pip.pypa.io/en/stable/installing/
+
+ * **Method 2 -** http://ask.xmodulo.com/install-pip-linux.html
+
+ * **Method 3 -** If you installed python on MAC OS X via ``brew install python``, then **pip** is already installed along with python.
+
+
+ **Step 2 - Install tornado**
+ ::
+
+         $ pip install tornado
+
+ **Step 3 - Install sockjs-tornado**
+ ::
+
+         $ pip install sockjs-tornado
+
+
+ **Step 4 - Install paho-mqtt**
+ ::
+
+         $ pip install paho-mqtt
+
+ **Step 5 - Install Mosquitto**
+ 
+ * *For* ``Mac`` *Users*
+ 
+   1. Brew Install Mosquitto
+   ::
+
+         $ brew install mosquitto
+
+   2. Configure mosquitto, by modifying the file at ``/usr/local/etc/mosquitto/mosquitto.conf``.
+
+ * *For* ``Ubuntu/Linux`` *Users*
+
+   1. Enable mosquitto repository (optional)
+
+      First Try directly, if it doesn't work, then follow this step and continue after this.::
+
+      $ sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa
+
+   
+
+   2. Update the sources with our new addition from above
+   ::
+
+        $ apt-get update
+
+  
+   3. And finally, download and install Mosquitto
+   ::
+
+         $ sudo apt-get install mosquitto
+
+ 
+
+   4. Configure mosquitto, by modifying the file at ``/usr/local/etc/mosquitto/mosquitto.conf``.
+
+
+
+
+Usage
+-----
+
+After having installed mosquittoChat, just run the following commands to use it:
+
+* **Mosquitto Server**
+  
+  1. *For* ``Mac`` *Users*
+  ::
+
+        # start normally
+        $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
+         
+        # If you want to run in background
+        $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf -d 
+
+        # start using brew services (doesn't work with tmux, athough there is a fix, mentioned in one of the pull requests and issues)
+        $ brew services start mosquitto
+
+
+  2. *For* ``Ubuntu/LInux`` *Users*
+  ::
+
+          # start normally
+          $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
+
+          # If you want to run in background
+          $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf -d 
+
+          # To start using service
+          $ sudo service mosquitto start
+
+          # To stop using service
+          $ sudo service mosquitto stop
+          
+          # To restart using service
+          $ sudo service mosquitto restart
+          
+          # To check the status
+          $ service mosquitto status
+
+
+
+* **Start mosquittochat Applcation**
+  ::
+
+          $ mosquittoChat [options]
+
+  - **Options**
+
+    :--port: Port number where the chat server will start
+
+
+  - **Example**
+    ::
+
+          $ mosquittoChat --port=9191
+
+  
+* **Stop mosquittoChat Server**
+
+
+
+  Click ``Ctrl+C`` to stop the server.
+
+
+
+Todo
+-----
+
+1. Add Private Chat functionality.
+   
+2. Manage Presence Management, sent, delivered acknowledgements.
+
+3. Message Persistence and delivery of messages to offline clinets.
+
+4. Add Blog post regarding this topic.
+
+
+
