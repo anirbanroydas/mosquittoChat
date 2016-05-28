@@ -2,17 +2,17 @@
 <html>
 
 <head>
-    <title>rabbitChat | Chat Server based on AMQP, RabbitMQ, sockJS, Tornado, sockjs-tornado and Pika</title>
+    <title>mosquittoChat | Chat Server based on MQTT, MosquittoClient, sockJS, Tornado, sockjs-tornado and paho-mqtt library</title>
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:100,200,300,400,600,700" />
     <link rel="stylesheet" href="../static/css/style.css" />
 </head>
 
 <body>
-    <h2 style="text-align: center;margin-bottom: 10px">rabbitChat Room!</h2>
+    <h2 style="text-align: center;margin-bottom: 10px">mosquittoChat Room!</h2>
     <div id="protocols" style="float: right">
         <ul>
             <li>
-                <input id="websocket" type="checkbox" value="websocket" checked="checked">
+                <input id="websocket" type="checkbox" value="websPet" checked="checked">
                 <label for="websocket">websocket</label>
             </li>
             <li>
@@ -75,17 +75,13 @@
         <div class="groupchatCB privateList">
             <ul class="privateUserList">
                 <li class="privateUser">
-                    <p>Rahul</p>
+                    <p>Rahul<span class='offline'>offline<span class='offline-symbol'> &#9731;</span></span></p>
+                    <h6 class='lastseen'>last seen yesterday at 11.30 am</h6>
                 </li>
                 <li class="privateUser">
-                    <p>Geeta</p>
+                    <p>Geeta<span class='online'>online<span class='online-symbol'> &#9749;</span></span></p>
                 </li>
-                <li class="privateUser">
-                    <p>Suraj</p>
-                </li>
-                <li class="privateUser">
-                    <p>Diana</p>
-                </li>
+                
             </ul>
         </div>
         <div class="groupchatCB chatbox" id="privateCB" style="display:none;">
