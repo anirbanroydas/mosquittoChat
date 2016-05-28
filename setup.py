@@ -16,14 +16,14 @@ import os
 # ############## general config ##############
 
 
-NAME = "rabbitChat"
+NAME = "mosquittoChat"
 
-VERSION = '1.0.0'
+VERSION = '1.0'
 
 
-PACKAGES = ["rabbitChat", "rabbitChat.apps", "rabbitChat.apps.main", "rabbitChat.apps.rabbitmq"]
+PACKAGES = ["mosquittoChat", "mosquittoChat.apps", "mosquittoChat.apps.main", "mosquittoChat.apps.mosquitto"]
 
-PROJECT_URL = 'https://github.com/anirbanroydas/rabbitChat'
+PROJECT_URL = 'https://github.com/anirbanroydas/mosquittoChat'
 
 AUTHOR = 'Anirban Roy Das'
 
@@ -61,7 +61,7 @@ CLASSIFIERS = [
 
 INSTALL_REQUIRES = ["tornado >= 2.2.1",
                     "sockjs-tornado",
-                    "pika",
+                    "paho-mqtt",
                     "setuptools >= 0.7.0", ]
 
 EXTRAS_REQUIRE = {}
@@ -101,7 +101,9 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=VERSION,
 
-    description='A Chat Server based on AMQP using RabbitMQ message broker implementing AMQP, websocket, sockjs, sockjs-tornado, tornado, and amqp python client library, Pika',
+    description='A Chat Server based on MQTT protocol using Mosquitto (broker a C implementation of MQTT),\
+                websocket, sockjs javascript library on client(browser) side, sockjs-tornado, tornado,\
+                and paho-mqtt (mqtt python client library)',
     long_description=LONG_DESCRIPTION,
 
     # The project's main homepage.
@@ -162,7 +164,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'rabbitChat=rabbitChat.server:main',
+            'mosquittoChat=mosquittoChat.server:main',
         ],
     },
 )
