@@ -3,19 +3,14 @@ include README.rst
 include LICENSE
 
 # inlcude templatesc
-recursive-include rabbitChat/templates *
+recursive-include mosquittoChat/templates *
 
 # include static js files
-recursive-include rabbotChat/static/js *
+recursive-include mosquittoChat/static/js *
 
 # include static css files
-recursive-include rabbitChat/static/css *
+recursive-include mosquittoChat/static/css *
 
-# include test files for development
-recursive-include tests *
-recursive-include tests/apps *
-recursive-include tests/templates *
-recursive-include tests/static/js *
 recursive-include tests/static/css *
 
 # include docs
