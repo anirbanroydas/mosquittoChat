@@ -125,8 +125,6 @@ body
 
 .box
 {
-    float: right;
-
     width: 335px;
     margin: 0 20px 0 20px;
     margin-top: 30px;
@@ -135,6 +133,12 @@ body
 .boxleft
 {
     float: left;
+
+}
+
+.boxright
+{   
+    float: right;
 }
 
 .box div
@@ -489,17 +493,17 @@ ul {
 
 .boxright div.privateList
 {
-    overflow: scroll;
-
+    overflow-y: scroll;
+     overflow-x: hidden;
+    width : 335px;
     background: #fff;
 }
 
 .boxright div.privateList .privateUserList
 {
-    width: 320px;
-
-    list-style: none;
-
+    width: 335px;
+   /* list-style: none;*/
+    margin-left: -40px;
     background: #fff;
 }
 
@@ -513,28 +517,89 @@ ul {
 {
     font-size: 16px;
 
-    margin-left: -50px;
+    /*margin-left: -50px;*/
 
     border-bottom: 2px solid #e8e8e8;
 }
+
+
+/*.boxright div.privateList .privateUserList .privateUser:hover{
+    font-weight: bold;
+}*/
+
+
 
 .boxright div.privateList .privateUserList .privateUser p
 {
     font-family: 'Open Sans', sans-serif;
     font-size: 15px;
     font-weight: 400;
-
-    margin-left: 50px;
-
+    margin-left: 20px;
+    text-align: left;
+    position: relative;
     color: #666;
+    margin-bottom: 10px;
+    margin-top: 10px;
 }
 
-.boxright div.privateList .privateUser:hover p
+/*.boxright div.privateList .privateUser:hover p
 {
     font-weight: bold;
 
     color: #41c197;
+}*/
+
+
+.privateUser .lastseen
+{
+    /*position: absolute;
+    right: 80px;*/
+    font-family: 'Open Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    margin-top: -10px;
+    margin-bottom: 10px;
+   /* margin-right: 20px;*/
 }
+
+
+
+
+.privateUser p .offline
+{
+    position: absolute;
+    right: 20px;
+    /*color: #0066ff;
+    font-weight: 600;*/
+}
+
+.privateUser p .offline .offline-symbol
+{
+    color: red;
+}
+
+.privateUser p .online
+{
+    position: absolute;
+    right: 20px;
+   /* color:  #33ff00;
+    font-weight: 600;*/
+}
+
+/*.privateUser p .offline:hover
+{
+    color: #0066ff;
+    font-weight: bold;
+}
+
+.privateUser p .online:hover
+{
+    color: #33ff00;
+    font-weight: bold;
+}
+*/
+
+
 
 .box input
 {
