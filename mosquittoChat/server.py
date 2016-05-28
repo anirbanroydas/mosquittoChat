@@ -35,7 +35,13 @@ def main():
     except KeyboardInterrupt:
         LOGGER.error('\n[server.main] EXCEPTION KEYBOARDINTERRUPT INITIATED\n')
         LOGGER.info("[server.main] Stopping Server....")
-        LOGGER.info('[server.main] closing all websocket connections objects and corresponsding pika client objects')
+        LOGGER.info('[server.main] closing all websocket connections objects and corresponsding mqtt client objects')
+        LOGGER.info('Stopping Tornado\'s main iolooop')
+        
+        # Stopping main thread's ioloop, not to be confused with current thread's ioloop
+        # which is ioloop.IOLoop.current()
+        tornado.ioloop.IOLoop.instance().stop()
+
         LOGGER.info("\n[server.main] Server Stopped.")
 
 
