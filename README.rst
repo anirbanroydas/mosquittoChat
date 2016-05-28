@@ -1,19 +1,19 @@
-rabbitChat
-===========
+mosquittoChat
+==============
 
-A Chat-Server/Chat-System based on AMQP protocol(RabbitMQ Message Broker)
+An MQTT protocol based Chat-Server/Chat-System using Mosquitto Broker, tornado as web server, sockjs in client(browser) side javascript library, sockjs-tornado as sockjs implementation on server side and paho-mqtt (mqtt python client).
 
 
 Documentation
 --------------
 
-**Link :** http://rabbitchat.readthedocs.io/en/latest/index.html
+**Link :** http://mosquittochat.readthedocs.io/en/latest/
 
 
 Project Home Page
 --------------------
 
-**Link :** https://pypi.python.org/pypi/rabbitChat
+**Link :** https://pypi.python.org/pypi/mosquittoChat
 
 
 
@@ -32,15 +32,16 @@ Check ``rabbitChat/LICENSE`` file for full Copyright notice.
 Overview
 ---------
 
-rabbitChat is a very simple Chat Server which can be set up locally to chat in your LAN. It supports both **Public Chat** among all participants connected simultaneously at a particular time and also **Private Chat** betweent those individual participants.
+mosquittochat is an MQTT protocol based simple Chat Server which can be set up locally to chat in your LAN. It supports both **Public Chat** among all participants connected simultaneously at a particular time and also **Private Chat** betweent those individual participants.
 
-It uses the `AMQP <https://www.amqp.org/>`_  protocol to implement the real time message passing system. **AMQP** is implemented in many languages and in many softwares, once of such is `RabbitMQ <https://www.rabbitmq.com/>`_ , which is a message broker implementing the `AMQP <https://www.amqp.org/>`_ protocol.
+It uses the `MQTT <https://www.mqtt.org/>`_  protocol to implement the real time message passing system. **MQTT** is implemented in many languages and in many softwares, one of such is `Mosquitto <https://www.mosquitto.org/>`_ , which is a message broker implementing the `MQTT <https://www.mqtt.org/>`_ protocol.
 
 The connection is created using the `sockjs <https://github.com/sockjs/sockjs-client>`_ protocol. **SockJS** is implemented in many languages, primarily in Javascript to talk to the servers in real time, which tries to create a duplex bi-directional connection between the **Client(browser)** and the **Server**. Ther server should also implement the **sockjs** protocol. Thus using the  `sockjs-tornado <https://github.com/MrJoes/sockjs-tornado>`_ library which exposes the **sockjs** protocol in `Tornado <http://www.tornadoweb.org/>`_ server.
 
-It first tries to create a `Websocket <https://en.wikipedia.org/wiki/WebSocket>`_ connection, and if it fails then it fallbacks to other transport mechanisms, such as **Ajax**, **long polling**, etc. After the connection is established, the tornado server**(sockjs-tornado)** connects to **rabbitMQ** via AMQP protocol using the **AMQP Python Client Library**, `Pika <https://pypi.python.org/pypi/pika>`_. 
+It first tries to create a `Websocket <https://en.wikipedia.org/wiki/WebSocket>`_ connection, and if it fails then it fallbacks to other transport mechanisms, such as **Ajax**, **long polling**, etc. After the connection is established, the tornado server**(sockjs-tornado)** connects to **Mosquitto** via MQTT protocol using the **MQTT Python Client Library**, `paho-mqtt <https://pypi.python.org/pypi/paho-mqtt/>`_. 
 
-Thus the connection is *web-browser* to *tornado* to *rabbitMQ* and vice versa.
+Thus the connection is *web-browser* to *tornado* to *mosquitto* and vice versa.
+
 
 
 
@@ -51,9 +52,9 @@ Technical Specs
 :sockjs-client: Advanced Websocket Javascript Client
 :Tornado: Async Python Web Library + Web Server
 :sockjs-tornado: SockJS websocket server implementation for Tornado
-:AMQP: Advance Message Queuing Protocol used in Message Oriented Middleware
-:pika: AMQP Python Client Library
-:RabbitMQ: A Message Broker implementing AMQP
+:MQTT: Machine-to-Machine (M2M)/"Internet of Things" connectivity protocol
+:paho-mqtt: MQTT Python Client Library
+:Mosquitto: A Message Broker implementing MQTT in C
 
 
 
@@ -62,9 +63,13 @@ Features
 
 * Public chat
 * Shows who joined and who left
-* Shows number of people online
-* Shows who is typing and who is not
+* Shows list of users online/offline 
+* Show last seen of offline features
+* Shows who is typing and who is not - typing indicator
+* Shows number of people online in public chat
 * Join/Leave chat room features
+
+
 
 
 
@@ -79,15 +84,15 @@ Prerequisites
 2. tornado
 3. sockjs-tornado
 4. sockjs-client
-5. pika
-6. rabbitMQ
+5. paho-mqtt
+6. mosquitto
 
 
 Install
 ~~~~~~~
 ::
 
-        $ pip install rabbitChat
+        $ pip install mosquittoChat
 
 If above dependencies do not get installed by the above command, then use the below steps to install them one by one.
 
@@ -113,98 +118,97 @@ If above dependencies do not get installed by the above command, then use the be
          $ pip install sockjs-tornado
 
 
- **Step 4 - Install pika**
+ **Step 4 - Install paho-mqtt**
  ::
 
-         $ pip install pika
+         $ pip install paho-mqtt
 
- **Step 5 - Install RabbitMQ**
+ **Step 5 - Install Mosquitto**
  
  * *For* ``Mac`` *Users*
  
-   1. Brew Install RabbitMQ
+   1. Brew Install Mosquitto
    ::
 
-         $ brew install rabbitmq
+         $ brew install mosquitto
 
-   2. Configure RabbitMq, follow this `link <https://www.rabbitmq.com/install-homebrew.html>`_, this `one <https://www.rabbitmq.com/install-standalone-mac.html>`_ and  `this <https://www.rabbitmq.com/configure.html>`_.
+   2. Configure mosquitto, by modifying the file at ``/usr/local/etc/mosquitto/mosquitto.conf``.
 
  * *For* ``Ubuntu/Linux`` *Users*
 
-   1. Enable RabbitMQ application repository
+   1. Enable mosquitto repository (optional)
+
+      First Try directly, if it doesn't work, then follow this step and continue after this.::
+
+      $ sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa
+
+   
+
+   2. Update the sources with our new addition from above
    ::
-           
-           $ echo "deb http://www.rabbitmq.com/debian/ testing main" >> /etc/apt/sources.list
 
-   2. Add the verification key for the package
-   ::
-
-         $ wget -o http://www.rabbitmq.com/rabbitmq-signing-key-public.asc | sudo apt-key add -
-
-   3. Update the sources with our new addition from above
-   :: 
-
-         $ apt-get update
+        $ apt-get update
 
   
-   4. And finally, download and install RabbitMQ
+   3. And finally, download and install Mosquitto
    ::
 
-         $ sudo apt-get install rabbitmq-server
+         $ sudo apt-get install mosquitto
 
  
 
-   5. Configure RabbitMQ, follow this `link <http://www.rabbitmq.com/install-debian.html>`_, this `one <https://www.rabbitmq.com/configure.html>`_  and `this <https://www.digitalocean.com/community/tutorials/how-to-install-and-manage-rabbitmq>`_. 
+   4. Configure mosquitto, by modifying the file at ``/usr/local/etc/mosquitto/mosquitto.conf``.
+
 
 
 
 Usage
 -----
 
-After having installed rabbitChat, just the run the following commands to use it:
+After having installed mosquittoChat, just run the following commands to use it:
 
-* **RabbitMQ Server**
+* **Mosquitto Server**
   
   1. *For* ``Mac`` *Users*
   ::
-          
-          # start normally
-          $ rabbitmq-server
-           
-          # If you want to run in background
-          $ rabbitmq-server --detached 
 
-          # start using brew rervices (doesn't work with tmux)
-          $ brew services rabbitmq start
+        # start normally
+        $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
+         
+        # If you want to run in background
+        $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf -d 
+
+        # start using brew services (doesn't work with tmux, athough there is a fix, mentioned in one of the pull requests and issues)
+        $ brew services start mosquitto
 
 
   2. *For* ``Ubuntu/LInux`` *Users*
   ::
 
           # start normally
-          $ rabbitmq-server
+          $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
 
           # If you want to run in background
-          $ rabbitmq-server --detached
+          $ mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf -d 
 
           # To start using service
-          $ service rabbitmq-server start
+          $ sudo service mosquitto start
 
           # To stop using service
-          $ service rabbitmq-server stop
+          $ sudo service mosquitto stop
           
           # To restart using service
-          $ service rabbitmq-server restart
+          $ sudo service mosquitto restart
           
           # To check the status
-          $ service rabbitmq-server status
+          $ service mosquitto status
 
 
 
-* **Start rabbitChat Server**
+* **Start mosquittochat Applcation**
   ::
 
-          $ rabbitChat [options]
+          $ mosquittoChat [options]
 
   - **Options**
 
@@ -214,10 +218,10 @@ After having installed rabbitChat, just the run the following commands to use it
   - **Example**
     ::
 
-          $ rabbitChat --port=9191
+          $ mosquittoChat --port=9191
 
   
-* **Stop rabbitChat Server**
+* **Stop mosquittoChat Server**
 
 
 
