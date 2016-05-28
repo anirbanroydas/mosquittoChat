@@ -1,756 +1,1143 @@
 """
-The pubsub module provides interface for the rabbitmq client.
+The pubsub module provides interface for the mosquitto client.
 
-It provides classes to create pika clients to connect to rabbitmq broker server, interact with
-and publish/subscribe to rabbitmq via creating channels, methods to publish, subscribe/consume, 
-stop consuming, start publishing, start connection, stop connection, create channel, close channel, 
-acknowledge delivery by publisher, acknowledge receiving of messages by consumers, send basic ack, 
-basic cancel requests and also add callbacks for various other events.
+It provides classes to create mqtt clients vai paho-mqtt library to connect to mosquitto broker server, 
+interact with and publish/subscribe to mosquitto via creating topics, methods to publish, subscribe/consume, 
+stop consuming, start publishing, start connection, stop connection,  acknowledge delivery by publisher,
+acknowledge receiving of messages by consumers and also add callbacks for various other events.
+
 """
 
 
-
-import pika.adapters
-import pika
-import uuid
 import json
 import logging
+import base64
+import os
+import tornado.ioloop
+import time
+import paho.mqtt.client as mqtt
 
-EXCHANGE = 'chatexchange'
-EXCHANGE_TYPE = 'topic'
-BINDING_KEY_DEFAULT = 'public.*'
+
+
+# EXCHANGE = 'chatexchange'
+# EXCHANGE_TYPE = 'topic'
+# BINDING_KEY_DEFAULT = 'public.*'
 PORT = 5672
 
 LOGGER = logging.getLogger(__name__)
 
+# globacl tornado main ioloop object 
+ioloop = tornado.ioloop.IOLoop.instance()
 
 
 
-class RabbitMqClient(object):
+# defining IO events
+WRITE = tornado.ioloop.IOLoop.WRITE 
+READ = tornado.ioloop.IOLoop.READ 
+ERROR = tornado.ioloop.IOLoop.ERROR
+
+# no. of mqtt clinets active with mosquitto
+mqttMosquittoParticipants = {'count': 0}
+# list of mqtt client ever connected with msoquitto, {'clientid':'name'}
+mqttClientSet = {}
+
+
+# # utility temporary functions to check rather than using logging/LOGGER
+# def pi(e): 
+#     print '\n[MosquittoClient] Inside ' + e.upper() + '()\n'
+
+
+# def pr(e):
+#     print '\n[MosquittoClient] Returning from ' + e.upper() + '()\n'
+
+
+
+class MosquittoClient(object):
     """
-    This is a RabbitMQ Client using the TornadoConnection Adapter that will
-    handle unexpected interactions with RabbitMQ such as channel and connection closures.
+    This is a Mosquitto Client class that will create an interface to connect to mosquitto
+    by creating mqtt clients.
 
-    If RabbitMQ closes the connection, it will reopen it. You should
-    look at the output, as there are limited reasons why the connection may
-    be closed, which usually are tied to permission related issues or
-    socket timeouts.
-
-    If the channel is closed, it will indicate a problem with one of the
-    commands that were issued and that should surface in the output as well.
-
-    It alos uses delivery confirmations and illustrates one way to keep track of
-    messages that have been sent and if they've been confirmed by RabbitMQ.
+    It provides methods for connecting, diconnecting, publishing, subscribing, unsubscribing and 
+    also callbacks related to many different events like on_connect, on_message, on_publish, on_subscribe,
+    on_unsubcribe, on_disconnect.
 
     """
 
-    def __init__(self, credentials=None, params=None, queue=None):
-        """Create a new instance of the consumer class, passing in the AMQP
-        URL used to connect to RabbitMQ.
 
-        :param credentials: credentials to connect to rabbitmq broker server
-        :type credentials: pika.credentials.PlainCredentials
-        :param params: connection paramaters used to connect with rabbitmq broker server
-        :type params: pika.connection.ConnectionParameters
-        :param queue: queue to be created after a channel is established which will be bound to an exchange
-        :type queue: string - random long base64 url safe encoded string
+    def __init__(self, participants=1, name='user', clientid=None, clean_session=True, userdata=None, host='localhost', port=1883, keepalive=60, bind_address='', username='guest', password='guest'):
+        """
+        Create a new instance of the MosquittoClient class, passing in the client
+        informaation, host, port, keepalive parameters.
+
+        :param  participants:       number of participants available presently 
+        :type   participants:       int 
+        :param  name:               name of client trying to connect to msoquitto 
+        :type   name:               string
+        :param  clientid:           unique client id for a client-broker connection
+        :type   clientid:           string
+        :param  clean_session:      whether to keep persistant connecion or not
+        :type   clean_session:      bool
+        :param  userdata:           user defined data of any type that is passed as the userdata parameter to callbacks.
+                                    It may be updated at a later point with the user_data_set() function.
+        :type   userdata:           user defined data (can be int, string, or any object)
+        :param  host:               the hostname or IP address of the remote broker
+        :type   host:               string
+        :param  port:               the network port of the server host to connect to. Defaults to 1883.
+                                    Note that the default port for MQTT over SSL/TLS is 8883 so if you are using tls_set() the port may need providing manually
+        :type   port:               int
+        :param  keepalive:          maximum period in seconds allowed between communications with the broker. 
+                                    If no other messages are being exchanged, this controls the rate at which the client will send ping messages to the broker
+        :type   keepalive:          int 
+        :param  bind_address:       the IP address of a local network interface to bind this client to, assuming multiple interfaces exist
+        :type   bind_address:       string
+        :param  username:           username for authentication
+        :type   username:           string 
+        :param  password:           password for authentication
+        :type   password:           string 
 
         """
 
+        # pi('__init__')
 
-        self._connection = None
+        self._participants = participants
+        self._name = name
+        self._clientid = clientid or self._genid() 
+        self._clean_session = clean_session 
+        self._userdata = userdata 
+        self._host = host 
+        self._port = port 
+        self._keepalive = keepalive 
+        self._bind_address = bind_address 
+        self._username = username
+        self._password = password
+
+        
         self._connected = False
         self._connecting = False
-        self._channel = None
         self._closing = False
         self._closed = False
-        self._consumer_tag = None
-        self._deliveries = []
-        self._acked = 0
-        self._nacked = 0
-        self._message_number = 0
-        self._credentials = credentials if credentials else pika.PlainCredentials('guest', 'guest')
-        self._parameters = params if params else pika.ConnectionParameters(host='localhost',
-                                                                           port=PORT,
-                                                                           virtual_host='/',
-                                                                           credentials=self._credentials)
-        self._queue = queue if queue else 'queue-' + str(uuid.uuid4())
+        self._connection = None
+        self._client = None
         self.websocket = None
-        self._status = 0
-        self._person = None
-        self._clientid = None
-        self._participants = 0
+        self._subNo = 0
+        self._sock = None
+        self._ioloopClosed = False
+        self._schedular = None
 
+        # pr('__init__')
 
-    def connect(self):
-        """This method connects to RabbitMQ via the Torando Connectoin Adapter, returning the 
-        connection handle.
 
-        When the connection is established, the on_connection_open method
-        will be invoked by pika.
 
-        :return: Returns a pika connection object which is a tornado connection object to rabbitmq server
-        :rtype: pika.adapters.TornadoConnection
 
-        """
+    def _genid(self):
+        """ 
+        Method that generates unique clientids by calling base64.urlsafe_b64encode(os.urandom(32)).replace('=', 'e').
+        
+        :return:        Returns a unique urlsafe id 
+        :rtype:         string 
 
+        """ 
 
-        if self._connecting:
-            LOGGER.warning('[RabbitMqClient] Already connecting to RabbitMQ')
-            return
+        # pi('_genid')
 
-        LOGGER.info('[RabbitMqClient] Connecting to RabbitMQ on localhost:5672, Object: %s ' % self)
-        self._connecting = True
+        return base64.urlsafe_b64encode(os.urandom(32)).replace('=', 'e')
 
-
-
-        return pika.adapters.TornadoConnection(parameters=self._parameters,
-                                               on_open_callback=self.on_connection_opened,
-                                               stop_ioloop_on_close=False)
-
-
-
-    def on_connection_opened(self, connection):
-        """This method is called by pika once the connection to RabbitMQ has
-        been established. It passes the handle to the connection object in
-        case we need it, but in this case, we'll just mark it unused.
-
-        :param connection: connection object created
-        :type connection: pika.adapters.TornadoConnection
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Rabbitmq connection opened : %s ' % connection)
-
-        self._status = 1
-        self._connected = True
-        self._connection = connection
-
-        self.add_on_connection_close_callback()
-        self.open_channel()
-
-
-
-    def add_on_connection_close_callback(self):
-        """This method adds an on close callback that will be invoked by pika
-        when RabbitMQ closes the connection to the publisher unexpectedly.
-
-        """
-
-        self._connection.add_on_close_callback(callback_method=self.on_connection_closed)
-
-
-
-
-    def on_connection_closed(self, connection, reply_code, reply_text):
-        """This method is invoked by pika when the connection to RabbitMQ is
-        closed unexpectedly. Since it is unexpected, we will reconnect to
-        RabbitMQ if it disconnects.
-
-        :param  connection: The closed connection obj
-        :type connection: pika.connection.Connection
-        :param reply_code: The server provided reply_code if given
-        :type reply_code: int 
-        :param reply_text: The server provided reply_text if given
-        :type reply_text: str 
-
-        """
-
-        LOGGER.warning(
-            '[RabbitMqClient] Rabbitmq connection closed unexpectedly : %s ' % connection)
-
-        self._channel = None
-        self._connecting = False
-        self._connected = False
-        self._status = 0
-        if self._closing:
-            LOGGER.warning('[RabbitMqClient] connection already closing')
-            return
-
-        else:
-            LOGGER.info("Connection closed, reopening in 5 seconds: reply_code : [%d] : reply_text : %s " % (
-                reply_code, reply_text))
-
-            self._connection.add_timeout(5, self.reconnect)
-
-
-
-    def reconnect(self):
-        """Will be invoked by the IOLoop timer if the connection is
-        closed. See the on_connection_closed method.
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Reconnecting to rabbitmq')
-
-        if not self._closing:
-            # Create a new connection
-            self._connection = self.connect()
-
-
-
-    def close_connection(self):
-        """This method closes the connection to RabbitMQ."""
-
-        if self._closing:
-            LOGGER.warning('[RabbitMqClient] connection is already closing...')
-            return
-
-        self._closing = True
-
-        self._connection.close()
-
-        self._connecting = False
-        self._connected = False
-
-        if self._channel:
-            self._channel = None
-        if self._connection:
-            self._connection = None
-        if self._consumer_tag:
-            self._consumer_tag = None
-        if self._queue:
-            self._queue = None
-        if self.websocket:
-            self.websocket = None
-
-        self._parameters = None
-        self._credentials = None
-        self._status = 0
-        self._closed = True
-        self._person = None
-
-        LOGGER.info('[RabbitMqClient] rabbitmq connection cosed')
-
-
-    def open_channel(self):
-        """Open a new channel with RabbitMQ by issuing the Channel.Open RPC
-        command. When RabbitMQ responds that the channel is open, the
-        on_channel_open callback will be invoked by pika.
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Creating a new channel for connection : %s ' %
-                    self._connection)
-
-        self._channel = self._connection.channel(on_open_callback=self.on_channel_open)
-
-
-
-    def on_channel_open(self, channel):
-        """This method is invoked by pika when the channel has been opened.
-        The channel object is passed in so we can make use of it.
-
-        Since the channel is now open, we'll declare the exchange to use.
-
-        :param channel: The channel object
-        :type channel: pika.channel.Channel 
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Channel opened : %s ' % channel)
-
-        self._status = 2
-
-        self._channel = channel
-        self.add_on_channel_close_callback()
-        self.setup_exchange()
-
-
-
-    def close_channel(self):
-        """Call to close the channel with RabbitMQ cleanly by issuing the
-        Channel.Close RPC command.
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Closing the channel... ')
-
-        self._status = 1
-
-        self._channel.close()
-
-        if self._channel:
-            LOGGER.info('[RabbitMqClient] Channel closed : %s ' % self._channel)
-            self._channel = None
-
-        else:
-            LOGGER.info('[RabbitMqClient] Channel closed')
-
-
-
-
-    def add_on_channel_close_callback(self):
-        """This method tells pika to call the on_channel_closed method if
-        RabbitMQ unexpectedly closes the channel.
-
-        """
-
-        self._channel.add_on_close_callback(self.on_channel_closed)
-
-
-
-    def on_channel_closed(self, channel, reply_code, reply_text):
-        """Invoked by pika when RabbitMQ unexpectedly closes the channel.
-        Channels are usually closed if you attempt to do something that
-        violates the protocol, such as re-declare an exchange or queue with
-        different parameters. In this case, we'll close the connection
-        to shutdown the object.
-
-        :param channel: The closed channel
-        :type channel: pika.channel.Channel
-        :param reply_code: The numeric reason the channel was closed
-        :type reply_code: int 
-        :param reply_text: The text reason the channel was closed
-        :type reply_text: str 
-
-        """
-
-        LOGGER.info("Channel %i was closed: reply_code : [%d] reply_text : %s " % (
-            channel, reply_code, reply_text))
-
-        self._status = 1
-
-        self.close_connection()
-
-
-
-    def setup_exchange(self):
-        """Setup the exchange on RabbitMQ by invoking the Exchange.Declare RPC
-        command. When it is complete, the on_exchange_declareok method will
-        be invoked by pika.
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Declaring exchange : %s ' % EXCHANGE)
-        self._channel.exchange_declare(exchange=EXCHANGE,
-                                       exchange_type=EXCHANGE_TYPE,
-                                       durable=True,
-                                       auto_delete=False,
-                                       nowait=False,
-                                       callback=self.on_exchange_declareok)
-
-
-
-
-    def on_exchange_declareok(self, frame):
-        """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
-        command.
-
-        :param frame: Exchange.DeclareOk response frame
-        :type frame: pika.Frame.Method
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Exchange declared')
-
-        self._status = 3
-
-        self.setup_queue()
-
-
-
-    def setup_queue(self):
-        """Setup the queue on RabbitMQ by invoking the Queue.Declare RPC
-        command. When it is complete, the on_queue_declareok method will
-        be invoked by pika.
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Declaring queue : for channel object : %s ' % self._channel)
-
-        self._channel.queue_declare(queue=self._queue,
-                                    durable=True,
-                                    exclusive=False,
-                                    auto_delete=True,
-                                    nowait=False,
-                                    arguments=None,
-                                    callback=self.on_queue_declareok)
-
-
-
-
-    def on_queue_declareok(self, method_frame):
-        """Method invoked by pika when the Queue.Declare RPC call made in
-        setup_queue has completed. mand is complete, the on_bindok method will
-        be invoked by pika.
-
-        :param  method_frame: The Queue.DeclareOk frame
-        :type method_frame: pika.frame.Method
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Queue declared')
-
-        self._status = 4
-
-        self.bind_queue(BINDING_KEY_DEFAULT)
-
-
-
-    def bind_queue(self, binding_key):
-        """In this method we will bind the queue
-        and exchange together with the routing key by issuing the Queue.Bind
-        RPC command.
-
-        :param  binding_key: The routing_key argument
-        :type binding_key: string
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Binding %s to %s with %s ' %
-                    (EXCHANGE, self._queue, binding_key))
-
-        self._channel.queue_bind(callback=self.on_bindok,
-                                 queue=self._queue,
-                                 exchange=EXCHANGE,
-                                 routing_key=binding_key,
-                                 nowait=False,
-                                 arguments=None)
-
-
-
-
-    def on_bindok(self, unused_frame):
-        """Invoked by pika when the Queue.Bind method has completed. At this
-        point we will start consuming messages by calling start_consuming
-        which will invoke the needed RPC commands to start the process.
-        It will also set channel for publishing.
-
-        :param  unused_frame: The Queue.BindOk response frame
-        :type unused_frame: pika.frame.Method
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Queue bound')
-
-        self._status = 5
-
-        self.setup_publishing()
-        self.start_consuming()
-
-
-
-    def setup_publishing(self):
-        """
-        In this method we will setup the channel for publishing by making it available
-        for delivery confirmations and publisher confirmations.
-
-        """
-
-        self.enable_delivery_confirmations()
-
-
-
-    def enable_delivery_confirmations(self):
-        """Send the Confirm.Select RPC method to RabbitMQ to enable delivery
-        confirmations on the channel. The only way to turn this off is to close
-        the channel and create a new one.
-
-        When the message is confirmed from RabbitMQ, the
-        on_delivery_confirmation method will be invoked passing in a Basic.Ack
-        or Basic.Nack method from RabbitMQ that will indicate which messages it
-        is confirming or rejecting.
-
-        """
-
-
-        LOGGER.info(
-            '[RabbitMqClient] Enabling delivery confirmation for publisher - Issuing Confirm.Select RPC command')
-
-        self._channel.confirm_delivery(callback=self.on_delivery_confirmation)
-
-        self._status = 6
-
-
-
-    def on_delivery_confirmation(self, method_frame):
-        """Invoked by pika when RabbitMQ responds to a Basic.Publish RPC
-        command, passing in either a Basic.Ack or Basic.Nack frame with
-        the delivery tag of the message that was published. The delivery tag
-        is an integer counter indicating the message number that was sent
-        on the channel via Basic.Publish. Here we're just doing house keeping
-        to keep track of stats and remove message numbers that we expect
-        a delivery confirmation of from the list used to keep track of messages
-        that are pending confirmation.
-
-        :param  method_frame: Basic.Ack or Basic.Nack frame
-        :type method_frame: pika.frame.Method
-
-        """
-
-        LOGGER.info('[RabbitMqClient] Publisher Delivery Confirmation received from broker')
-
-        confirmation_type = method_frame.method.NAME.split('.')[1].lower()
-
-        LOGGER.info('[RabbitMqClient] Received %s for delivery tag: %i ' %
-                    (confirmation_type, method_frame.method.delivery_tag))
-
-        if confirmation_type == 'ack':
-            self._acked += 1
-        elif confirmation_type == 'nack':
-            self._nacked += 1
-
-        self._deliveries.remove(method_frame.method.delivery_tag)
-
-        LOGGER.info('[RabbitMqClient] Published %i messages, %i have yet to be confirmed, %i were acked and %i were nacked ' % (
-            self._message_number, len(self._deliveries), self._acked, self._nacked))
-
-
-
-    def publish(self, msg, routing_key):
-        """If the class is not stopping, publish a message to RabbitMQ,
-        appending a list of deliveries with the message number that was sent.
-        This list will be used to check for delivery confirmations in the
-        on_delivery_confirmations method.
-
-        Once the message has been sent, schedule another message to be sent.
-        The main reason I put scheduling in was just so you can get a good idea
-        of how the process is flowing by slowing down and speeding up the
-        delivery intervals by changing the PUBLISH_INTERVAL constant in the
-        class.
-
-        :param msg: Message to be published to Channel
-        :tyep msg: string
-        :param routing_key: Routing Key to direct message via the Exchange
-        :type routing_key: string 
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Publishing message')
-
-        properties = pika.BasicProperties(content_type='application/json',
-                                          headers=msg,
-                                          delivery_mode=2,
-                                          app_id=self._person
-                                          )
-
-
-        msg = json.dumps(msg, ensure_ascii=False)
-
-        self._channel.basic_publish(exchange=EXCHANGE,
-                                    routing_key=routing_key,
-                                    body=msg,
-                                    properties=properties)
-
-        self._message_number += 1
-
-        self._deliveries.append(self._message_number)
-
-        LOGGER.info('[RabbitMqClient] Message published')
-
-
-    def start_consuming(self):
-        """This method sets up the consumer by first calling
-        add_on_cancel_callback so that the object is notified if RabbitMQ
-        cancels the consumer. It then issues the Basic.Consume RPC command
-        which returns the consumer tag that is used to uniquely identify the
-        consumer with RabbitMQ. We keep the value to use it when we want to
-        cancel consuming. The on_message method is passed in as a callback pika
-        will invoke when a message is fully received.
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Started Consuming - Issuing consumer related RPC commands')
-
-        self.add_on_cancel_callback()
-
-        self._consumer_tag = self._channel.basic_consume(consumer_callback=self.on_message,
-                                                         queue=self._queue,
-                                                         no_ack=False,
-                                                         exclusive=True,
-                                                         )
-        self._status = 7
-
-        LOGGER.info('[RabbitMqClient] self._status ==7 now')
-        LOGGER.info(
-            '[RabbitMqClient] rabbit client can now publish/consume msessag.\nSending first msg to websocket...')
-
-        m = {'msg_type': 'rabbitmqOK'}
-
-        self.websocket.send(json.dumps(m))
-
-
-
-    def add_on_cancel_callback(self):
-        """Add a callback that will be invoked if RabbitMQ cancels the consumer
-        for some reason. If RabbitMQ does cancel the consumer,
-        on_consumer_cancelled will be invoked by pika.
-
-        """
-
-        self._channel.add_on_cancel_callback(callback=self.on_consumer_cancelled)
-
-
-
-    def on_consumer_cancelled(self, method_frame):
-        """Invoked by pika when RabbitMQ sends a Basic.Cancel for a consumer
-        receiving messages.
-
-        :param  method_frame: The Basic.Cancel frame
-        :type method_frame: pika.frame.Method
-
-        """
-
-
-        LOGGER.info(
-            '[RabbitMqClient] Consumer was cancelled remotely, shutting down.... sent method_frame %s ' % method_frame)
-
-        if self._channel:
-            LOGGER.info('[RabbitMqClient] initating closing of channel')
-            self.close_channel()
-
-
-
-    def on_message(self, unused_channel, basic_deliver, properties, body):
-        """Invoked by pika when a message is delivered from RabbitMQ. The
-        channel is passed for your convenience. The basic_deliver object that
-        is passed in carries the exchange, routing key, delivery tag and
-        a redelivered flag for the message. The properties passed in is an
-        instance of BasicProperties with the message properties and the body
-        is the message that was sent.
-
-        :param  unused_channel: The channel object
-        :type unused_channel: pika.channel.Channel
-        :param basic_deliver: The basic delivery object passed
-        :type basic_deliver: pika.Spec.Basic.Deliver
-        :param properties: The basic properties used to publish the message
-        :type properties: pika.Spec.BasicProperties
-        :param  body: The message body
-        :type body: str|unicode
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Received message # %s from %s : %s ' %
-                    (basic_deliver.delivery_tag, properties.app_id, body))
-
-        json_decoded_body = json.loads(body)
-        stage = json_decoded_body['stage']
-
-        # acknowledge the messge received
-        self.acknowledge_message(basic_deliver.delivery_tag)
-
-        if stage == 'stop' and self._person == json_decoded_body['name']:
-            LOGGER.warning(
-                '[RabbitMqClient] skipping sending message to websocket since webscoket is closed.')
-            LOGGER.info('[RabbitMqClient] initating closing of rabbitmq Client Connection.....')
-
-            self.stop()
-
-        else:
-            LOGGER.info(
-                '[RabbitMqClient] sending the message to corresponsding websoket: %s ' % self.websocket)
-
-            self.websocket.send(body)
-
-
-
-
-    def acknowledge_message(self, delivery_tag):
-        """Acknowledge the message delivery from RabbitMQ by sending a
-        Basic.Ack RPC method for the delivery tag.
-
-        :param delivery_tag: The delivery tag from the Basic.Deliver frame
-        :type delivery_tag: int 
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] Acknowledging message %i ' % delivery_tag)
-
-        self._channel.basic_ack(delivery_tag)
-
-
-
-    def stop_consuming(self):
-        """Tell RabbitMQ that you would like to stop consuming by sending the
-        Basic.Cancel RPC command.
-
-        """
-
-        LOGGER.info('[RabbitMqClient] stopping consuming....')
-
-        if self._channel:
-            LOGGER.info('[RabbitMqClient] Sending a Basic.Cancel RPC command to RabbitMQ')
-
-            self._channel.basic_cancel(callback=self.on_cancelok,
-                                       consumer_tag=self._consumer_tag)
-
-
-
-
-    def on_cancelok(self, unused_frame):
-        """This method is invoked by pika when RabbitMQ acknowledges the
-        cancellation of a consumer. At this point we will close the channel.
-        This will invoke the on_channel_closed method once the channel has been
-        closed, which will in-turn close the connection.
-
-        :param  unused_frame: The Basic.CancelOk frame
-        :type unused_frame: pika.frame.Method
-
-        """
-
-
-        LOGGER.info('[RabbitMqClient] RabbitMQ acknowledged the cancellation of the consumer')
-
-        if self._consumer_tag:
-            self._consumer_tag = None
-
-        self.close_channel()
-        self.close_connection()
 
 
 
     def start(self):
-        """Run the example consumer by connecting to RabbitMQ and then
-        starting the IOLoop to block and allow the SelectConnection to operate.
+        """
+        Method to start the mosquitto client by initiating a connection  to mosquitto broker
+        by using the connect method and staring the network loop.
 
         """
 
-        LOGGER.info('[RabbitMqClient] starting the rabbitmq connection')
+        # pi('start')
 
+        LOGGER.info('[MosquittoClient] starting the mosquitto connection')
+
+        self.setup_connection()
+        self.setup_callbacks()
+        
+        # self._connection is the return code of the connection, success, failure, error. Success = 0
         self._connection = self.connect()
-        # self._connection.ioloop.start()
+
+        # print '[MosquittoClient] self._connection : ', self._connection
+
+        if self._connection == 0: 
+            # Start paho-mqtt mosquitto Event/IO Loop
+            LOGGER.info('[MosquittoClient] Startig IOLoop for client : %s ' % self)
+            
+            self.start_ioloop()
+
+            # Start schedular for keeping the mqtt connection opening by chekcing keepalive, and request/response with PINGREQ/PINGRESP
+            self.start_schedular()
+
+        else:
+            self._connecting = False 
+
+            LOGGER.warning('[MosquittoClient] Connection for client :  %s  with broker Not Established ' % self)
 
 
+        # pr('start')
+
+
+
+
+    
+    def setup_connection(self):
+        """
+        Method to setup the extra options like username,password, will set, tls_set etc 
+        before starting the connection.
+
+        """ 
+
+        # pi('setup_connection')
+
+        self._client = self.create_client()
+
+        # setting up client username and password
+        self._client.username_pw_set(self._username, self._password)
+        
+        # setting up will message for private messaging
+        # online/offline status can be used in private messaging
+        will_topic = 'private/' + self._clientid + '/status'
+        
+        msg = {
+                'msg_type': 'status',
+                'status': 'offline',
+                'msg': {
+                            'name': self._name,
+                            'clientid': self._clientid
+                        }
+              }
+        
+        self._client.will_set(will_topic, payload=json.dumps(msg), qos=2, retain=True)
+
+        # setting up will message for public messaging
+        # self._will_topic = 'public/msgs'
+        # msg = {
+        #         'msg_type': 'status',
+        #         'msg': {
+        #                     'status': 'offline',
+        #                     'name': self._name,
+        #                     'clientid': self._clientid
+        #                 }
+        #       }  
+        #
+        # self._client.will_set(self._will_topic, payload=json.dumps(msg), qos=2, retain=False)
+
+
+        # pr('setup_connection')
+
+
+
+
+
+    
+    def create_client(self):
+        """
+        Method to create the paho-mqtt Client object which will be used to connect 
+        to mosquitto. 
+        
+        :return:        Returns a mosquitto mqtt client object 
+        :rtype:         paho.mqtt.client.Client 
+
+        """ 
+
+        # pi('create_client')
+
+        return mqtt.Client(client_id=self._clientid, clean_session=self._clean_session, userdata=self._userdata)
+
+
+
+
+
+    def setup_callbacks(self):
+        """
+        Method to setup all callbacks related to the connection, like on_connect,
+        on_disconnect, on_publish, on_subscribe, on_unsubcribe etc. 
+
+        """ 
+
+        # pi('setup_callbacks')
+
+        self._client.on_connect = self.on_connect 
+        self._client.on_disconnect = self.on_disconnect 
+        self._client.on_publish = self.on_publish 
+        self._client.on_subscribe = self.on_subscribe 
+        self._client.on_unsubcribe = self.on_unsubscribe
+        self._client.message_callback_add('private/+/msgs', self.on_private_message)
+        self._client.message_callback_add('private/+/status', self.on_private_status)
+        self._client.message_callback_add('public/msgs', self.on_public_message)
+
+
+        # pr('setup_callbacks')
+
+
+
+
+
+    def connect(self):
+        """
+        This method connects to Mosquitto via returning the 
+        connection return code.
+
+        When the connection is established, the on_connect callback
+        will be invoked by paho-mqtt.
+
+        :return:        Returns a mosquitto mqtt connection return code, success, failure, error, etc 
+        :rtype:         int
+
+        """
+
+        # pi('connect')
+
+        if self._connecting:
+            LOGGER.warning('[MosquittoClient] Already connecting to RabbitMQ')
+            return
+
+        self._connecting = True
+
+        if self._connected: 
+            LOGGER.warning('[MosquittoClient] Already connected to RabbitMQ')
+
+        else:
+            LOGGER.info('[MosquittoClient] Connecting to RabbitMQ on localhost:5672, Object: %s ' % self)
+
+            # pr('connect')
+
+            return self._client.connect(host=self._host, port=self._port, keepalive=self._keepalive, bind_address=self._bind_address)
+
+
+
+    
+
+
+    def on_connect(self, client, userdata, flags, rc): 
+        """
+        This is a Callback method and is called when the broker responds to our
+        connection request. 
+
+        :param      client:     the client instance for this callback 
+        :param      userdata:   the private user data as set in Client() or userdata_set() 
+        :param      flags:      response flags sent by the broker 
+        :type       flags:      dict
+        :param      rc:         the connection result 
+        :type       rc:         int
+
+        flags is a dict that contains response flags from the broker:
+
+        flags['session present'] - this flag is useful for clients that are using clean session
+        set to 0 only. If a client with clean session=0, that reconnects to a broker that it has
+        previously connected to, this flag indicates whether the broker still has the session 
+        information for the client. If 1, the session still exists. 
+
+        The value of rc indicates success or not:
+
+        0: Connection successful 1: Connection refused - incorrect protocol version 
+        2: Connection refused - invalid client identifier 3: Connection refused - server unavailable 
+        4: Connection refused - bad username or password 5: Connection refused - not authorised 
+        6-255: Currently unused.
+
+        """ 
+
+        # pi('on_connect')
+
+        if self._connection == 0:
+            self._connected = True
+
+            LOGGER.info('[MosquittoClient] Connection for client :  %s  with broker established, Return Code : %s ' % (client, str(rc)))
+
+            # start subscribing to topics
+            self.subscribe()
+
+        else:
+            self._connecting = False 
+
+            LOGGER.warning('[MosquittoClient] Connection for client :  %s  with broker Not Established, Return Code : %s ' % (client, str(rc)))
+
+
+        # pr('on_connect')
+
+
+
+
+
+
+
+    def start_ioloop(self):
+        """
+        Method to start ioloop for paho-mqtt mosquitto clients so that it can 
+        process read/write events for the sockets.
+
+        Using tornado's ioloop, since if we use any of the loop*() function provided by
+        phao-mqtt library, it will either block the entire tornado thread, or it will 
+        keep on creating separate thread for each client if we use loop_start() fucntion. 
+
+        We don't want to block thread or to create so many threads unnecessarily given 
+        python GIL.
+
+        Since the separate threads calls the loop() function indefinitely, and since its doing 
+        network io, its possible it may release GIL, but I haven't checked that yet, if that 
+        is the case, we can very well use loop_start().Pattern
+
+        But for now we will add handlers to tornado's ioloop().
+
+        """ 
+
+        # pi('start_ioloop')
+
+        # the socket conection of the present mqtt mosquitto client object 
+        self._sock = self._client.socket()
+
+        # adding tornado iooloop handler 
+        events = READ | WRITE | ERROR
+
+        # print '[MosquittoClient] adding tornado handler now'
+
+        if self._sock:
+
+            # print 'self._sock is present, hence adding handler'
+
+            ioloop.add_handler(self._sock.fileno(), self._events_handler, events)
+
+        else: 
+            LOGGER.warning('[MosquittoClient] client socket is closed already')
+
+
+        # pr('start_ioloop')
+
+
+
+
+
+
+    def stop_ioloop(self):
+        """
+        Method to stop ioloop for paho-mqtt mosquitto clients so that it cannot 
+        process any more read/write events for the sockets.
+
+        Actually the paho-mqtt mosquitto socket has been closed, so bascially this
+        method removed the tornaod ioloop handler for this socket.
+
+        """ 
+
+        # pi('stop_ioloop')
+
+        self._sock = self._client.socket()
+        
+        # # removing tornado iooloop handler
+        # print '[MosquittoClient] removing tornado handler now'
+
+        if self._sock: 
+
+            # print 'self._sock is present, hence removing handler'
+
+            ioloop.remove_handler(self._sock.fileno()) 
+
+            # updating close state of ioloop 
+            self._ioloopClosed = True
+
+
+        else: 
+            LOGGER.warning('[MosquittoClient] client socket is closed already')
+
+
+        # pr('stop_ioloop')
+
+
+
+
+    def _events_handler(self, fd, events):
+        """
+        Handle IO/Event loop events, processing them.
+
+        :param      fd:             The file descriptor for the events
+        :type       fd:             int
+        :param      events:         Events from the IO/Event loop
+        :type       events:         int 
+
+        """
+
+        # pi('_events_handler')
+
+        self._sock = self._client.socket() 
+
+        # print '[MosquittoClient] self._sock : ', self._sock
+
+        if not self._sock:
+            LOGGER.error('Received events on closed socket: %r', fd)
+            return
+
+        if events & WRITE:
+            # LOGGER.info('Received WRITE event')
+
+            # handler write events by calling loop_read() method of paho-mqtt client
+            self._client.loop_write()
+
+        if events & READ:
+            # LOGGER.info('Received READ event')
+            
+            # handler write events by calling loop_read() method of paho-mqtt client
+            self._client.loop_read() 
+
+        
+
+        if events & ERROR:
+            LOGGER.error('Error event for socket : %s and client : %s ' % (self._sock, self._client))
+
+
+        # pr('_events_handler')
+
+
+
+
+
+
+    def start_schedular(self):
+        """
+        This method calls Tornado's PeriodicCallback to schedule a callback every few seconds,
+        which calls paho mqtt client's loop_misc() function which keeps the connection open by
+        checking for keepalive value and by keep sending pingreq and pingresp to moqsuitto broker.
+
+        """ 
+
+        # pi('start_schedular')
+
+        LOGGER.info('[MosquittoClient] Starting Scheduler for client : %s ' % self)
+
+        # torndao ioloop shcedular 
+        self._schedular = tornado.ioloop.PeriodicCallback(callback=self._client.loop_misc, callback_time=10000, io_loop=ioloop)
+
+        # start the schedular
+        self._schedular.start()
+
+        # pr('start_schedular')
+
+
+
+    def stop_schedular(self):
+        """
+        This method calls stops the tornado's periodicCallback Schedular loop.
+
+        """ 
+
+        # pi('stop_schedular')
+
+        LOGGER.info('[MosquittoClient] Stoping Scheduler for client : %s ' % self)
+
+        # stop the schedular
+        self._schedular.stop()
+
+        # pr('stop_schedular')
+
+
+
+
+
+
+    def disconnect(self):   
+        """
+        Method to disconnect the mqqt connection with mosquitto broker.
+
+        on_disconnect callback is called as a result of this method call. 
+
+        """ 
+
+        # pi('disconnect')
+
+        if self._closing: 
+            LOGGER.warning('[MosquittoClient] Connection for client :  %s  already disconnecting..' % self)
+
+        else:
+            self._closing = True 
+
+            if self._closed:
+                LOGGER.warning('[MosquittoClient] Connection for client :  %s  already disconnected ' % self)
+
+            else:
+                self._client.disconnect() 
+
+
+        # pr('disconnect')
+
+
+
+    
+
+
+
+    def on_disconnect(self, client, userdata, rc):
+        """
+        This is a Callback method and is called when the client disconnects from
+        the broker.
+
+        """  
+
+        # pi('on_disconnect')
+
+        LOGGER.info('[MosquittoClient] Connection for client :  %s  with broker cleanly disconnected with return code : %s ' % (client, str(rc)))
+
+        self._connecting = False 
+        self._connected = False 
+        self._closing = True
+        self._closed = True
+
+        
+        # stopping ioloop - actually mqtt ioloop stopped, not the real torando ioloop, 
+        # just removing handler from tornado ioloop
+        self.stop_ioloop() 
+
+        # stoppig shechular 
+        self.stop_schedular()
+
+        if self._ioloopClosed:
+            self._sock = None
+
+
+        # pr('on_disconnect')
+
+
+
+
+    
+
+    def subscribe(self, topic_list=None):
+        """
+        This method sets up the mqtt client to start subscribing to topics by accepting a list of tuples
+        of topic and qos pairs.
+
+        The on_subscribe method is called as a callback if subscribing is succesfull or if it unsuccessfull, the broker
+        returng the suback frame. 
+
+        :param      :topic_list:    a tuple of (topic, qos), or, a list of tuple of format (topic, qos). 
+        :type       :topic_list:    list or tuple 
+
+
+        """
+
+        # pi('subscribe')
+
+        LOGGER.info('[MosquittoClient] clinet : %s started Subscribing ' % self)
+ 
+        # add clientid:name key-value pair in the global mqttClientSet
+        if self._clientid not in mqttClientSet:
+
+            # print '[MosquittoClient] inside self._clientid not in mqttClientSet'
+
+            mqttClientSet[self._clientid] = self._name 
+
+        if topic_list is None:
+
+            # print '[MosquittoClient] insdie topic_list is None'
+
+            topic_list = [] 
+            topic = ("public/msgs", 2)
+            topic_list.append(topic)
+
+            if self._subNo == 0:
+
+                # print '[MosquittoClient] inside self._subNo === 0'
+
+                for cid in mqttClientSet.keys():
+                    topics = ("private/" + cid + "/status", 2)
+                    topic_list.append(topics)
+        
+
+        LOGGER.info('[MosquittoClient] Subscribing to topic_list : %s ' % topic_list)
+
+        self._client.subscribe(topic_list)
+       
+        # pr('subscribe')
+
+
+        
+
+
+
+
+
+    def on_subscribe(self, client, userdata, mid, granted_qos): 
+        """
+        This is a Callback method and is called when the broker responds to a subscribe request.
+
+        The mid variable matches the mid variable returned from the corresponding subscribe() call.
+        The granted_qos variable is a list of integers that give the QoS level the broker has granted
+        for each of the different subscription requests. 
+
+        :param      client:         the client which subscribed which triggered this callback 
+        :param      userdata:       the userdata associated with the client during its creation 
+        :param      mid:            the message id value returned by the broker 
+        :type       mid:            int 
+        :param      granted_qos:    list of integers that give the QoS level the broker has granted 
+                                    for each of the different subscription requests 
+        :type       granted_qos:    list
+
+        """
+
+        # pi('on_subscribe')
+
+        LOGGER.info('[MosquittoClient] client :  %s  subscribed to topic succesfully with message id : %s ' % (client, str(mid)))
+
+        # first subscribtion or later
+        self._subNo = self._subNo + 1
+
+        if self._subNo == 1:
+            # LOGGER.info('MosquittoClient] First subsrbition for client : %s ', client)
+            
+            # get current mqtt mosuitto clients subcribing on some topics by calling addnewmqttosquittoclietns
+            self._participants = self.addNewMqttMosquittoClient()
+            
+            # creating first message to be sent to associated websocket
+            firstMsg = {
+                            'msg_type': 'public',
+                            'stage': 'start',
+                            'msg': {
+                                        'clientid': self._clientid, 
+                                        'name': self._name,
+                                        'participants': self._participants,
+                                    },
+                            'clientlist': mqttClientSet
+                        }
+            
+            # calling method to send message to associated websocket
+            LOGGER.info('[MosquittoClient] mosquitto is now ready for publish/subscribe. \nSending first msg to websocket...')
+            
+            self.sendMsgToWebsocket(firstMsg)
+
+            # publishing status to its own private status topic, so that whoever start
+            # subcribing to its status, get the status info
+            statusmsg = {
+                            'msg_type': 'status',
+                            'status': 'online',
+                            'msg': {
+                                        'name': self._name,
+                                        'clientid': self._clientid
+                                    }
+                        }
+
+            self.publish(topic='private/' + self._clientid + '/status', msg=statusmsg, qos=2, retain=True)
+
+            # publishing the new mqqt client info to everybody else subscribed to public topic
+            # and hence they can choose to subscribe to the new client too.
+            
+            # creating new msg to be sent to the subcribing clients
+            newmsg = {
+                        'msg_type': 'public',
+                        'stage': 'new_participant',
+                        'msg': {
+                                    'clientid': self._clientid, 
+                                    'name': self._name,
+                                    'participants': self._participants
+                                }
+                    }
+
+            self.publish(topic='public/msgs', msg=newmsg, qos=2, retain=False)
+
+
+
+        # pr('on_subscribe')
+
+
+
+
+    
+
+    def addNewMqttMosquittoClient(self):
+        """
+        Method called after new mqtt connection is established and the client has started subsribing to 
+        atleast some topics, called by on_subscribe callback. 
+
+        """ 
+
+        # pi('addNewMqttMosquittoClient')
+
+        mqttMosquittoParticipants['count'] = mqttMosquittoParticipants['count'] + 1
+
+        # print '[MosquittoClient] mqttMosquittoParticipants : ', mqttMosquittoParticipants['count']
+        
+        return mqttMosquittoParticipants['count']
+
+
+
+
+    def sendMsgToWebsocket(self, msg): 
+        """
+        Method to send message to associated websocket. 
+
+        :param      msg:        the message to be sent to the websocket 
+        :type       msg:        string, unicode or json encoded string or a dict
+
+        """ 
+
+        # pi('sendMsgToWebsocket')
+
+        # LOGGER.info('[MosquittoClient] mosquitto is sending msg to associated webscoket')
+
+        if isinstance(msg, str) or isinstance(msg, unicode):
+            payload = msg 
+        else: 
+            payload = json.dumps(msg)
+        
+        self.websocket.send(payload)   
+
+
+        # pr('sendMsgToWebsocket')
+
+
+
+
+
+
+    def unsubscribe(self, topic_list=None):
+        """
+        This method sets up the mqtt client to unsubscribe to topics by accepting topics as string or list.
+
+        The on_unsubscribe method is called as a callback if unsubscribing is succesfull or if it unsuccessfull. 
+
+        :param      topic_list:        The topics to be unsubscribed from 
+        :type       topic_list:         list of strings(topics)
+
+        """
+
+        # pi('unsubscribe')
+
+        LOGGER.info('[MosquittoClient] clinet : %s started Unsubscribing ' % self)
+
+        if topic_list is None:
+            topic_list = []
+            topic = "public/msgs"
+            topic_list.append(topic)
+            for cid in mqttClientSet.keys():
+                    topics = "private/" + cid + "/status"
+                    topic_list.append(topics)
+        
+        self._client.unsubscribe(topic_list)
+        
+
+        # pr('unsubscribe')
+    
+    
+
+
+    def on_unsubscribe(self, client, userdata, mid): 
+        """
+        This is a Callback method and is called when the broker responds to an 
+        unsubscribe request. The mid variable matches the mid variable returned from t
+        he corresponding unsubscribe() call. 
+
+        :param      client:             the client which initiated unsubscribed
+        :param      userdata:           the userdata associated with the client 
+        :param      mid:                the message id value sent by the broker of the unsubscribe call. 
+        :type       mid:                int 
+
+        """
+
+        # pi('on_unsubscribe')
+
+        LOGGER.info('[MosquittoClient] client :  %s  unsubscribed to topic succesfully with message id : %s ' % (client, str(mid)))
+
+        # pr('on_unsubscribe')
+
+        
+
+
+
+
+    def publish(self, topic, msg=None, qos=2, retain=False):
+        """
+        If the class is not stopping, publish a message to MosquittoClient.
+
+        on_publish callback is called after broker confirms the published message.
+        
+        :param  topic:  The topic the message is to published to
+        :type   topic:  string 
+        :param  msg:    Message to be published to broker
+        :type   msg:    string 
+        :param  qos:    the qos of publishing message 
+        :type   qos:    int (0, 1 or 2) 
+        :param  retain: Should the message be retained or not 
+        :type   retain: bool
+
+        """
+
+        # pi('publish')
+
+        # LOGGER.info('[MosquittoClient] Publishing message')
+
+        # converting message to json, to pass the message(dict) in acceptable format (string)
+        if isinstance(msg, str) or isinstance(msg, unicode):
+            payload = msg
+        else:
+            payload = json.dumps(msg, ensure_ascii=False)
+
+        self._client.publish(topic=topic, payload=payload, qos=qos, retain=retain)
+
+
+        # pr('publish')
+
+
+
+
+
+
+
+    def on_publish(self, client, userdata, mid): 
+        """
+        This is a Callback method and is called when a message that was to be sent
+        using the publish() call has completed transmission to the broker. For messages
+        with QoS levels 1 and 2, this means that the appropriate handshakes have completed.
+
+        For QoS 0, this simply means that the message has left the client. 
+        The mid variable matches the mid variable returned from the corresponding publish()
+        call, to allow outgoing messages to be tracked.
+
+        This callback is important because even if the publish() call returns success,
+        it does not always mean that the message has been sent.
+
+        :param      client:         the client who initiated the publish method 
+        :param      userdata:       the userdata associated with the client during its creation 
+        :param      mid:            the message id sent by the broker 
+        :type       mid:            int 
+
+        """
+
+        # pi('on_publish')
+
+        # LOGGER.info('[MosquittoClient] client :  %s  published message succesfully with message id : %s ' % (client, str(mid)))
+
+        pass
+
+        # pr('on_publish')
+
+
+   
+
+
+    
+
+    def on_private_message(self, client, userdata, msg): 
+        """
+        This is a Callback method and is called  when a message has been received on a topic
+        [private/cientid/msgs] that the client subscribes to. 
+
+        :param      client:         the client who initiated the publish method 
+        :param      userdata:       the userdata associated with the client during its creation 
+        :param      msg:            the message sent by the broker 
+        :type       mid:            string or json encoded string 
+
+        """
+
+        # // Todo
+        pass
+
+
+    
+    
+
+    def on_private_status(self, client, userdata, msg): 
+        """
+        This is a Callback method and is called  when a message has been received on a topic
+        [private/cientid/status] that the client subscribes to.
+
+        :param      client:         the client who initiated the publish method 
+        :param      userdata:       the userdata associated with the client during its creation 
+        :param      msg:            the message sent by the broker 
+        :type       mid:            string or json encoded string 
+
+        """
+
+        # pi('on_private_status')
+
+        # LOGGER.info('[MosquittoClient] Received message with mid : %s from topic : %s with qos :  %s and retain = %s ' % (str(msg.mid), msg.topic, str(msg.qos), str(msg.retain)))
+        
+        json_decoded_body = json.loads(msg.payload)
+
+        if json_decoded_body['status'] == 'offline':
+
+            # print '[MosquittoClient] received status === offline'
+
+            if json_decoded_body['msg']['clientid'] == self._clientid:
+
+                # print 'received offline status on self._clientid, hence stopping mqtt client'
+
+                # since status message has been sent, its safe to close the mqtt mosquitto connection now
+                self.stop() 
+
+                # return from this function so as to avoid send the status message to the correspongin 
+                # websocket since its already closed.
+                
+
+                # pr('on_private_status')
+
+                return
+            
+            last_seen = time.localtime()
+            json_decoded_body['last_seen'] = {
+                                                'date': last_seen.tm_mday,
+                                                'month': last_seen.tm_mon,
+                                                'year': last_seen.tm_year,
+                                                'hour': last_seen.tm_hour,
+                                                'min': last_seen.tm_min
+                                            } 
+        
+        # LOGGER.info('[MosquittoClient] sending the message to corresponsding websoket: %s ' % self.websocket)
+
+        # print '[MosquittoClient] msg to be sent : ', json_decoded_body
+
+        self.sendMsgToWebsocket(json_decoded_body)
+
+
+        # pr('on_private_status')
+
+
+
+
+    
+    
+    def on_public_message(self, client, userdata, msg): 
+        """
+        This is a Callback method and is called  when a message has been received on a topic
+        [public/msgs] that the client subscribes to.
+
+        :param      client:         the client who initiated the publish method 
+        :param      userdata:       the userdata associated with the client during its creation 
+        :param      msg:            the message sent by the broker 
+        :type       mid:            string or json encoded string 
+
+        """
+
+        # pi('on_public_message')
+
+        # LOGGER.info('[MosquittoClient] Received message with mid : %s from topic : %s with qos :  %s and retain = %s ' % (str(msg.mid), msg.topic, str(msg.qos), str(msg.retain)))
+
+        json_decoded_body = json.loads(msg.payload)
+        stage = json_decoded_body['stage']
+
+        if stage == 'new_participant':
+            
+            # print '[MosquittoClient] Received stage == new_participant'
+
+            if json_decoded_body['msg']['clientid'] != self._clientid: 
+
+                # print '[MosquittoClient] received stage == new_participant with != self._clientid, thus subscribing to its private status'
+                
+                topic_list = ('private/' + str(json_decoded_body['msg']['clientid']) + '/status', 2)
+                
+                # print 'MosquittoClient] topic_list to be sent : ', topic_list
+                
+                # subscribe the new participant's status topic
+                self.subscribe(topic_list=topic_list)
+            
+            else:
+
+
+                # pr('on_public_message')
+
+                return
+
+
+
+        if stage == 'stop' and self._clientid == json_decoded_body['msg']['clientid']:
+
+            # print '[MosquittoClient] received stage == stop with == self._clientid, thus sending offline status to subscribers'
+                
+            # LOGGER.info('[MosquittoClient] skipping sending message to websocket since webscoket is closed.')
+            # LOGGER.info('[MosquittoClient] initating closing of rabbitmq Client Connection...')
+
+            # avoid sending the message to the corresponding websocket, since its already cloesed. 
+            # rather sending the offline status message to the subscribers of its private/status topic
+            self.send_offline_status()
+
+        else:
+            # print '[MosquittoClient] received stage != new_participant and != self._clientid, thus sendimg msg to corresponding websocket'
+                
+            # LOGGER.info('[MosquittoClient] sending the message to corresponsding websoket: %s ' % self.websocket)
+
+            self.sendMsgToWebsocket(json_decoded_body)
+
+
+        # pr('on_public_message')
+
+
+
+
+    
+
+    def send_offline_status(self): 
+        """
+        Method is called when the mqtt client's corresponding websocket is closed.
+        This method will send the subcribing clients to its private status an offline status
+        message.
+
+        """ 
+
+        # pi('send_offline_status')
+
+        # removing the subscribed but now unsubscribed and disconected mqtt mosqitto client 
+        self._participants = self.delMqttMosquittoClient()
+
+        # publishing status message to private/clientid/status topic
+        statusmsg = {
+                            'msg_type': 'status',
+                            'status': 'offline',
+                            'msg': {
+                                        'name': self._name,
+                                        'clientid': self._clientid
+                                    }
+                        }
+
+        self.publish(topic='private/' + self._clientid + '/status', msg=statusmsg, qos=2, retain=True)
+
+
+        # pr('send_offline_status')
+
+
+
+
+
+
+    def delMqttMosquittoClient(self):
+        """ Method called after an mqtt clinet unsubsribes to 
+        atleast some topics, called by on_subscribe callback. 
+
+        :return:    Returns update mqqt clients active 
+        :rtype:     dict with update count 
+
+        """ 
+
+        # pi('delMqttMosquittoClient')
+
+        mqttMosquittoParticipants['count'] = mqttMosquittoParticipants['count'] - 1
+
+        # print '[MosquittoClient] mqttMosquittoParticipants : ', mqttMosquittoParticipants['count']
+        
+        return mqttMosquittoParticipants['count']
+
+
+
+
+    
 
     def stop(self):
-        """Cleanly shutdown the connection to RabbitMQ by stopping the consumer
-        with RabbitMQ. When RabbitMQ confirms the cancellation, on_cancelok
-        will be invoked by pika, which will then closing the channel and
-        connection. The IOLoop is started again because this method is invoked
-        when CTRL-C is pressed raising a KeyboardInterrupt exception. This
-        exception stops the IOLoop which needs to be running for pika to
-        communicate with RabbitMQ. All of the commands issued prior to starting
-        the IOLoop will be buffered but not processed.
+        """
+        Cleanly shutdown the connection to Mosquitto by disconnecting the mqtt client.
+
+        When mosquitto confirms disconection, on_disconnect callback will be called.
 
         """
 
+        # pi('stop')
 
-        LOGGER.info('[RabbitMqClient] Stopping RabbitMQClient object... : %s ' % self)
+        LOGGER.info('[MosquittoClient] Stopping MosquittoClient object... : %s ' % self)
 
-        self.stop_consuming()
+        self.disconnect()
 
-        LOGGER.info('[RabbitMqClient] RabbitMQClient Stopped')
-
-
-    def status(self):
-        """Gives the status of the RabbitMQClient Connection.
+        # pr('stop')
 
 
-        :return: Returns the current status of the connection
-        :rtype: self._status
-
-        """
-
-
-        return self._status
+    
 
 
 
