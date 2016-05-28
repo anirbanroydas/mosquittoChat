@@ -1,0 +1,4 @@
+tornado >= 2.2.1
+sockjs-tornado
+paho-mqtt
+setuptools >= 0.7.0
