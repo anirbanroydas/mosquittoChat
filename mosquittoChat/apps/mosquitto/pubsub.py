@@ -645,7 +645,7 @@ class MosquittoClient(object):
                     topic_list.append(topics)
         
 
-        LOGGER.info('[MosquittoClient] Subscribing to topic_list : %s ' % topic_list)
+        LOGGER.info('[MosquittoClient] Subscribing to topic_list : %s ' % str(topic_list))
 
         self._client.subscribe(topic_list)
        
