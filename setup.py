@@ -29,7 +29,7 @@ AUTHOR = 'Anirban Roy Das'
 
 EMAIL = 'anirban.nick@gmail.com'
 
-KEYWORDS = ["chat server amqp protocol rabbitmq message broker via sockjs websocket tornado with sockjs-tornado and amqp python client library Pika"]
+KEYWORDS = "chat server amqp protocol rabbitmq message broker via sockjs websocket tornado with sockjs-tornado and amqp python client library Pika"
 
 CLASSIFIERS = [
 
@@ -70,7 +70,7 @@ PACKAGE_DATA = {
     # data files need to be listed both here (which determines what gets
     # installed) and in MANIFEST.in (which determines what gets included
     # in the sdist tarball)
-    "rabbitChat": ["static/css/*.css",
+    "mosquittoChat": ["static/css/*.css",
                    "static/js/*.js",
                    "templates/*.html",
                    ],
