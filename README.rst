@@ -25,7 +25,7 @@ Details
 :Email: anirban.nick@gmail.com
 :Copyright(C): 2016, Anirban Roy Das <anirban.nick@gmail.com>
 
-Check ``rabbitChat/LICENSE`` file for full Copyright notice.
+Check ``mosquittoChat/LICENSE`` file for full Copyright notice.
 
 
 
