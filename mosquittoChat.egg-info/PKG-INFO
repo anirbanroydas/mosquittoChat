@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: mosquittoChat
-Version: 1.0
+Version: 1.0.1
 Summary: A Chat Server based on MQTT protocol using Mosquitto (broker a C implementation of MQTT),                websocket, sockjs javascript library on client(browser) side, sockjs-tornado, tornado,                and paho-mqtt (mqtt python client library)
 Home-page: https://github.com/anirbanroydas/mosquittoChat
 Author: Anirban Roy Das
