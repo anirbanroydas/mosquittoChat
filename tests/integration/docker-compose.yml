@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+
+  mosquittoChat_integration_tester:
+    build: ../..
+    image: aroyd/mosquittoChat_integration_tester:${MOSQUITTOCHAT_app_INTEGRATION_TEST_IMAGE_TAG:-latest}
+    environment:
+      ENV: INTEGRATION_TEST 
+    depends_on:
+      - mosquitto
+  
+
+  mosquitto:
+    image: eclipse-mosquitto:1.4.10
