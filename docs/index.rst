@@ -17,7 +17,7 @@ Details
 
 :Author: Anirban Roy Das         
 :Email: anirban.nick@gmail.com
-:Copyright(C): 2016, Anirban Roy Das <anirban.nick@gmail.com>
+:Copyright(C): 2017, Anirban Roy Das <anirban.nick@gmail.com>
 
 Check ``mosquittoChat/LICENSE`` file for full Copyright notice.
 
@@ -32,9 +32,10 @@ Documentation:
    overview
    features
    installation
+   ci_setup
    usage
    api
-   references
+   testing
 
 
 
