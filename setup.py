@@ -18,7 +18,7 @@ import os
 
 NAME = "mosquittoChat"
 
-VERSION = '1.0.1'
+VERSION = '1.1.1'
 
 
 PACKAGES = ["mosquittoChat", "mosquittoChat.apps", "mosquittoChat.apps.main", "mosquittoChat.apps.mosquitto"]
@@ -162,7 +162,7 @@ setup(
     # $ pip install -e .
     test_suite='tests',
     tests_require=TEST_REQUIRES,
-    
+
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
