@@ -11,9 +11,7 @@ recursive-include mosquittoChat/static/js *
 # include static css files
 recursive-include mosquittoChat/static/css *
 
-recursive-include tests/static/css *
-
-# include docs
-recursive-include docs *
+# include mosquitto config file
+recursive-include config/mosquitto.conf
 
 
