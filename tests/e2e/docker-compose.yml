@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+
+  mosquittoChat_e2e_tester:
+    build: ../..
+    image: aroyd/mosquittoChat_e2e_test:${MOSQUITTOCHAT_E2E_TEST_IMAGE_TAG:-latest}
+    environment:
+      ENV: END_TO_END_TEST 
+    depends_on:
+      - mosquitto
+  
+
+  mosquitto:
+    image: eclipse-mosquitto:1.4.10
