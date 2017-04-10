@@ -2,7 +2,7 @@ Installation
 =============
 
 
-There are two types of Installation. One using rabbitChat as a binary by installaing from pip and running the application in  the local machine directly. Another method is running the application from Docker. Hence another set of installation steps for the Docker use case.
+There are two types of Installation. One using mosquittoChat as a binary by installaing from pip and running the application in  the local machine directly. Another method is running the application from Docker. Hence another set of installation steps for the Docker use case.
 
 [Docker Method] Prerequisite (Optional)
 -----------------------------------------
