@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+
+  mosquittoChat:
+    build: .
+    image: ${DOCKER_REPO}:${DOCKER_IMAGE_DEV_TAG:-latest-dev}
+    ports:
+      - "5002:5002"
+    environment:
+      ENV: DEV
+    volumes:
+      - ./mosquittoChat:/project/mosquittoChat
+    depends_on:
+      - mosquitto
+  
+
+  mosquitto:
+    image: eclipse-mosquitto:1.4.10
