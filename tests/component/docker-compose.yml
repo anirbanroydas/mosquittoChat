@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  mosquittoChat_component_tester:
+    build: 
+      context: ../..
+      dockerfile: tests/component/Dockerfile
+    image: aroyd/mosquittoChat_component_tester:${MOSQUITTOCHAT_COMPONENT_TESTER_IMAGE_TAG:-latest}
+    depends_on:
+      - mosquittoChat
+  
+
+  mosquittoChat:
+    build: ../..
+    image: aroyd/mosquittoChat_component_test:${MOSQUITTOCHAT_COMPONENT_TEST_IMAGE_TAG:-latest}
+    environment:
+      ENV: COMPONENT_TEST 
+    depends_on:
+      - mosquitto
+  
+
+  mosquitto:
+    image: eclipse-mosquitto:1.4.10
+  
