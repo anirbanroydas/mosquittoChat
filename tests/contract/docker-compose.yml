@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+
+  mosquittoChat_contract_tester:
+    build: ../..
+    image: aroyd/mosquittoChat_contract_tester:${MOSQUITTOCHAT_CONTRACT_TEST_IMAGE_TAG:-latest}
+    environment:
+      ENV: CONTRACT_TEST 
+
+
