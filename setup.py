@@ -18,7 +18,7 @@ import os
 
 NAME = "mosquittoChat"
 
-VERSION = '1.1.1'
+VERSION = '1.1.0'
 
 
 PACKAGES = ["mosquittoChat", "mosquittoChat.apps", "mosquittoChat.apps.main", "mosquittoChat.apps.mosquitto"]
