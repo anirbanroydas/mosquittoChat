@@ -65,7 +65,7 @@ INSTALL_REQUIRES = ["tornado >= 2.2.1",
                     "setuptools >= 0.7.0", ]
 
 TEST_REQUIRES = [
-    "pytest == 3.0.6",
+    "pytest == 9.0.3",
     "pytest-flask == 0.10.0",
     "doubles == 1.2.1"
 ]
